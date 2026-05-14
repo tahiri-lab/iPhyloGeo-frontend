@@ -6,39 +6,16 @@ import {
 } from 'recharts'
 import type { ClimaticPreview } from '../../../services/api'
 import { useLang } from '../../../context/LanguageContext'
+import { downloadSvgFromContainer } from '../../../utils/svgExport'
+import { selectStyle } from '../../../styles/commonStyles'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ChartType = 'Bar' | 'Scatter' | 'Line' | 'Pie'
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function downloadSVG(container: HTMLDivElement | null, filename: string) {
-  const svg = container?.querySelector('svg')
-  if (!svg) return
-  const serializer = new XMLSerializer()
-  const svgStr = serializer.serializeToString(svg)
-  const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const selectStyle: React.CSSProperties = {
-  background: 'var(--primary)',
-  border: '1px solid var(--border)',
-  borderRadius: 8,
-  color: 'var(--text)',
-  fontSize: 13,
-  padding: '6px 10px',
-  cursor: 'pointer',
-  minWidth: 160,
-}
+const selectStyleWide: React.CSSProperties = { ...selectStyle, minWidth: 160 }
 
 const thStyle: React.CSSProperties = {
   padding: '8px 12px',
@@ -217,13 +194,13 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
         <div style={{ display: 'flex', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
           <div>
             <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{t.chart_x_axis}</p>
-            <select style={selectStyle} value={xCol} onChange={e => setXCol(e.target.value)}>
+            <select style={selectStyleWide} value={xCol} onChange={e => setXCol(e.target.value)}>
               {columns.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
             <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{t.chart_y_axis}</p>
-            <select style={selectStyle} value={yCol} onChange={e => setYCol(e.target.value)}>
+            <select style={selectStyleWide} value={yCol} onChange={e => setYCol(e.target.value)}>
               {columns.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -262,7 +239,7 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
               <button
-                onClick={() => downloadSVG(chartRef.current, `chart-${xCol}-vs-${yCol}.svg`)}
+                onClick={() => downloadSvgFromContainer(chartRef.current, `chart-${xCol}-vs-${yCol}.svg`)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px', borderRadius: 8,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
+import { validateEmail } from '../../../utils/validation'
 
 function CoffeeMug() {
   return (
@@ -98,7 +99,7 @@ export default function CoffeeLoader({
   const [emailErr, setEmailErr] = useState('')
 
   const handleSubmit = () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !validateEmail(email)) {
       setEmailErr('Please enter a valid email.')
       return
     }
