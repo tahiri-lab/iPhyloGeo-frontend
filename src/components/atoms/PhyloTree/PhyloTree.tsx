@@ -1,64 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
+import { parseNewick, type TreeNode } from '../../../utils/newickParser'
+import { downloadSvgElement } from '../../../utils/svgExport'
+import { zoomBtnStyle } from '../../../styles/commonStyles'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-interface TreeNode {
-  name: string
-  branchLength: number
-  children: TreeNode[]
-}
 
 interface LayoutNode {
   node: TreeNode
   x: number
   y: number
-}
-
-// ── Newick Parser ─────────────────────────────────────────────────────────────
-
-function parseNewick(s: string): TreeNode {
-  const str = s.trim().replace(/;$/, '').trim()
-  const ctx = { s: str, pos: 0 }
-  return parseSubtree(ctx)
-}
-
-function parseSubtree(ctx: { s: string; pos: number }): TreeNode {
-  if (ctx.s[ctx.pos] === '(') {
-    ctx.pos++
-    const children: TreeNode[] = [parseSubtree(ctx)]
-    while (ctx.pos < ctx.s.length && ctx.s[ctx.pos] === ',') {
-      ctx.pos++
-      children.push(parseSubtree(ctx))
-    }
-    if (ctx.pos < ctx.s.length && ctx.s[ctx.pos] === ')') ctx.pos++
-    const name = parseName(ctx)
-    const branchLength = parseBranchLength(ctx)
-    return { name, branchLength, children }
-  } else {
-    const name = parseName(ctx)
-    const branchLength = parseBranchLength(ctx)
-    return { name, branchLength, children: [] }
-  }
-}
-
-function parseName(ctx: { s: string; pos: number }): string {
-  let name = ''
-  while (ctx.pos < ctx.s.length && !'(),;:'.includes(ctx.s[ctx.pos])) {
-    name += ctx.s[ctx.pos++]
-  }
-  return name.trim()
-}
-
-function parseBranchLength(ctx: { s: string; pos: number }): number {
-  if (ctx.pos >= ctx.s.length || ctx.s[ctx.pos] !== ':') return 0
-  ctx.pos++
-  let numStr = ''
-  const valid = new Set(['.', '-', '+', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-  while (ctx.pos < ctx.s.length && valid.has(ctx.s[ctx.pos])) {
-    numStr += ctx.s[ctx.pos++]
-  }
-  return parseFloat(numStr) || 0
 }
 
 // ── Layout (rectangular cladogram) ───────────────────────────────────────────
@@ -146,9 +97,10 @@ export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreePr
       const root = parseNewick(newick)
       const { nodes, svgW, svgH } = buildLayout(root)
 
-      const lineColor = darkMode ? '#9F74D0' : '#B593DD'
-      const nodeColor = darkMode ? '#1FA391' : '#2DD4BF'
-      const textColor = darkMode ? '#FFFFFF' : '#1A1C1E'
+      const lineColor = darkMode ? '#9F74D0' : '#7C3AED'
+      const nodeColor = darkMode ? '#1FA391' : '#0D9488'
+      const textColor = darkMode ? '#FFFFFF' : '#111827'
+      const textHalo = darkMode ? '#2a2a3a' : '#e2dff0'
 
       const paths: React.ReactElement[] = []
       const dots: React.ReactElement[] = []
@@ -191,8 +143,9 @@ export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreePr
             <text
               key={`l${keyI++}`}
               x={layout.x + LABEL_PAD} y={layout.y}
-              fill={textColor} fontSize={12} fontWeight={700}
+              fill={textColor} fontSize={13} fontWeight={700}
               dominantBaseline="middle"
+              stroke={textHalo} strokeWidth={3} paintOrder="stroke"
             >
               {node.name}
             </text>
@@ -226,29 +179,7 @@ export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreePr
 
   const handleDownloadSVG = () => {
     if (!svgRef.current) return
-    const serializer = new XMLSerializer()
-    const svgStr = serializer.serializeToString(svgRef.current)
-    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${name}.svg`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const btnStyle: React.CSSProperties = {
-    width: 28, height: 28,
-    border: '1px solid var(--border)',
-    borderRadius: 6,
-    background: 'var(--primary)',
-    color: 'var(--text)',
-    cursor: 'pointer',
-    fontSize: 16,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
+    downloadSvgElement(svgRef.current, `${name}.svg`, darkMode ? '#2a2a3a' : '#e2dff0')
   }
 
   return (
@@ -286,9 +217,9 @@ export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreePr
       >
         {/* Zoom controls */}
         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
-          <button style={btnStyle} onClick={() => setZoom(z => Math.min(z * 1.3, 5))}>+</button>
-          <button style={btnStyle} onClick={() => setZoom(z => Math.max(z / 1.3, 0.2))}>−</button>
-          <button style={btnStyle} onClick={() => setZoom(1)}>↺</button>
+          <button style={zoomBtnStyle} onClick={() => setZoom(z => Math.min(z * 1.3, 5))}>+</button>
+          <button style={zoomBtnStyle} onClick={() => setZoom(z => Math.max(z / 1.3, 0.2))}>−</button>
+          <button style={zoomBtnStyle} onClick={() => setZoom(1)}>↺</button>
         </div>
 
         {/* Scrollable + zoomable tree */}

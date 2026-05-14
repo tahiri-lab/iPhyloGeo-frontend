@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { GeneticPreview } from '../../../services/api'
+import { useTheme } from '../../../context/ThemeContext'
 
 // ── Nucleotide colors (matches dashbio AlignmentChart scheme) ─────────────────
 
@@ -76,6 +77,8 @@ const MAX_DISPLAY_COLS = 80
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const { sequences, full_length } = data
   const [startPos, setStartPos] = useState(0)
 
@@ -123,7 +126,7 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
       )}
 
       {/* SVG alignment grid */}
-      <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10, background: '#1a1c2a' }}>
+      <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10, background: isDark ? '#000000' : '#ffffff' }}>
         <svg width={svgW} height={svgH} style={{ display: 'block' }}>
 
           {/* Conservation bars */}
@@ -184,7 +187,7 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
             const y = gridTop + ri * CELL_H
             return (
               <g key={`row${ri}`}>
-                <text x={2} y={y + CELL_H - 4} fill="#ccc" fontSize={10} fontFamily="monospace">
+                <text x={2} y={y + CELL_H - 4} fill={isDark ? '#ccc' : '#333'} fontSize={10} fontFamily="monospace">
                   {names[ri].length > 10 ? names[ri].slice(0, 9) + '…' : names[ri]}
                 </text>
                 {Array.from(seq).map((ch, ci) => {
@@ -217,7 +220,7 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
             <text
               x={2}
               y={gridTop + names.length * CELL_H + CELL_H - 4}
-              fill="#fff"
+              fill={isDark ? '#fff' : '#1a1c1e'}
               fontSize={10}
               fontFamily="monospace"
               fontWeight={700}
@@ -252,7 +255,7 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
           <line
             x1={LABEL_W} y1={gridTop + names.length * CELL_H}
             x2={svgW} y2={gridTop + names.length * CELL_H}
-            stroke="#333" strokeWidth={1}
+            stroke={isDark ? '#555' : '#ccc'} strokeWidth={1}
           />
         </svg>
       </div>
