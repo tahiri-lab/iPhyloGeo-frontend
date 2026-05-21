@@ -1,13 +1,48 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useLang } from '../../context/LanguageContext'
-import videoDark from '../../assets/videos/indexPhylogeo.mp4'
-import videoLight from '../../assets/videos/indexPhylogeo_light.mp4'
+
+const importDarkVideo = () => import('../../assets/videos/indexPhylogeo.mp4')
+const importLightVideo = () => import('../../assets/videos/indexPhylogeo_light.mp4')
 
 export default function HomePage() {
   const { theme } = useTheme()
   const { t } = useLang()
-  const video = theme === 'dark' ? videoDark : videoLight
+  const [videoSrc, setVideoSrc] = useState<string>('')
+
+  useEffect(() => {
+    let cancelled = false
+    const loadCurrent = async () => {
+      const mod = theme === 'dark' ? await importDarkVideo() : await importLightVideo()
+      if (!cancelled) setVideoSrc(mod.default)
+    }
+    void loadCurrent()
+    return () => { cancelled = true }
+  }, [theme])
+
+  useEffect(() => {
+    const g = globalThis as typeof globalThis & {
+      requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+
+    const preloadOther = () => {
+      if (theme === 'dark') {
+        void importLightVideo()
+      } else {
+        void importDarkVideo()
+      }
+    }
+
+    if (g.requestIdleCallback && g.cancelIdleCallback) {
+      const id = g.requestIdleCallback(preloadOther, { timeout: 2500 })
+      return () => g.cancelIdleCallback?.(id)
+    }
+
+    const timeout = setTimeout(preloadOther, 1200)
+    return () => clearTimeout(timeout)
+  }, [theme])
 
   return (
     <div
@@ -22,24 +57,27 @@ export default function HomePage() {
       }}
     >
       {/* Video background — key forces remount on theme change */}
-      <video
-        key={video}
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: 'fixed',
-          top: 0, left: 0,
-          width: '100vw', height: '100vh',
-          objectFit: 'cover',
-          zIndex: 0,
-          filter: theme === 'dark' ? 'brightness(80%)' : 'brightness(80%)',
-          transition: 'filter 0.4s ease',
-        }}
-      >
-        <source src={video} type="video/mp4" />
-      </video>
+      {videoSrc && (
+        <video
+          key={videoSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '100vw', height: '100vh',
+            objectFit: 'cover',
+            zIndex: 0,
+            filter: 'brightness(80%)',
+            transition: 'filter 0.4s ease',
+          }}
+        >
+          <source src={videoSrc} type="video/mp4" />
+        </video>
+      )}
 
       {/* Dark overlay so white text is always legible */}
       <div

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useLang, type Lang, type Translations } from '../../../context/LanguageContext'
+import { prefetchLikelyRoutes, prefetchRoute } from '../../../router'
 
 const NAV_ITEMS: { path: string; labelKey: keyof Translations; icon: React.ReactNode }[] = [
   {
@@ -97,6 +98,33 @@ export default function NavBar() {
   const { lang, setLang, t } = useLang()
   const location = useLocation()
 
+  useEffect(() => {
+    let cancelled = false
+    const g = globalThis as typeof globalThis & {
+      requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+
+    const runPrefetch = () => {
+      if (cancelled) return
+      void prefetchLikelyRoutes()
+    }
+
+    if (g.requestIdleCallback && g.cancelIdleCallback) {
+      const id = g.requestIdleCallback(runPrefetch, { timeout: 1600 })
+      return () => {
+        cancelled = true
+        g.cancelIdleCallback?.(id)
+      }
+    }
+
+    const timeout = setTimeout(runPrefetch, 700)
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [])
+
   return (
     <nav
       style={{
@@ -174,6 +202,8 @@ export default function NavBar() {
               key={item.path}
               to={item.path}
               style={{ textDecoration: 'none' }}
+              onMouseEnter={() => { void prefetchRoute(item.path) }}
+              onFocus={() => { void prefetchRoute(item.path) }}
             >
               <div
                 style={{

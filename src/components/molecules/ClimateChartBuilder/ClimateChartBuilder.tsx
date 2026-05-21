@@ -84,12 +84,12 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
 
     const xAxisCommon = {
       dataKey: 'x',
-      tick: { fill: 'var(--text-secondary)', fontSize: 11 } as React.SVGProps<SVGTextElement>,
+      tick: { fill: 'var(--text-secondary)', fontSize: 11 },
       label: { value: xCol, position: 'insideBottom' as const, offset: -20, fill: 'var(--text-secondary)', fontSize: 12 },
     }
 
     const yAxisCommon = {
-      tick: { fill: 'var(--text-secondary)', fontSize: 11 } as React.SVGProps<SVGTextElement>,
+      tick: { fill: 'var(--text-secondary)', fontSize: 11 },
       label: { value: yCol, angle: -90, position: 'insideLeft' as const, offset: 12, fill: 'var(--text-secondary)', fontSize: 12 },
     }
 
