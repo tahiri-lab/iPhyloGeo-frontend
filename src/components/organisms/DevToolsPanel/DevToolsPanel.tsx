@@ -123,7 +123,7 @@ const APP_EDGES: [string, string][] = [
   ['phy-newick', 'phylo'], ['phylo', 'phy-svg'], ['phy-svg', 'phy-dl'],
 ]
 
-function getAppGraphStylesheet(darkMode: boolean): cytoscape.Stylesheet[] {
+function getAppGraphStylesheet(darkMode: boolean): cytoscape.StylesheetJson {
   const mk = (bg: string, border: string, fg: string) =>
     ({ 'background-color': bg, 'border-color': border, color: fg })
   const d = darkMode
@@ -136,7 +136,7 @@ function getAppGraphStylesheet(darkMode: boolean): cytoscape.Stylesheet[] {
         'text-valign': 'center' as const,
         'text-halign': 'center' as const,
         'font-size': 10,
-        'font-weight': '600',
+        'font-weight': 600,
         width: 100, height: 38,
         shape: 'round-rectangle' as const,
         'border-width': 1.5,
