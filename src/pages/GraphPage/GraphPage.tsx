@@ -186,7 +186,7 @@ function TreeGraph({
     cyRef.current = cytoscape({
       container: containerRef.current,
       elements: elements as cytoscape.ElementDefinition[],
-      style: getCytoscapeStylesheet(darkMode, layout) as cytoscape.Stylesheet[],
+      style: getCytoscapeStylesheet(darkMode, layout) as cytoscape.StylesheetJson,
       layout: getLayoutConfig(layout),
       userZoomingEnabled: true,
       userPanningEnabled: true,
