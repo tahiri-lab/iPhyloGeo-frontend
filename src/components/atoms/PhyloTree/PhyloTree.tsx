@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
+import { useTheme } from '../../../context/ThemeContext'
 import { parseNewick, type TreeNode } from '../../../utils/newickParser'
 import { downloadSvgElement } from '../../../utils/svgExport'
 import { zoomBtnStyle } from '../../../styles/commonStyles'
@@ -86,7 +87,9 @@ interface PhyloTreeProps {
   darkMode?: boolean
 }
 
-export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreeProps) {
+export default function PhyloTree({ newick, name, darkMode: darkModeProp }: PhyloTreeProps) {
+  const { theme } = useTheme()
+  const darkMode = darkModeProp ?? theme === 'dark'
   const [zoom, setZoom] = useState(1)
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -100,7 +103,6 @@ export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreePr
       const lineColor = darkMode ? '#9F74D0' : '#7C3AED'
       const nodeColor = darkMode ? '#1FA391' : '#0D9488'
       const textColor = darkMode ? '#FFFFFF' : '#111827'
-      const textHalo = darkMode ? '#2a2a3a' : '#e2dff0'
 
       const paths: React.ReactElement[] = []
       const dots: React.ReactElement[] = []
@@ -145,7 +147,6 @@ export default function PhyloTree({ newick, name, darkMode = true }: PhyloTreePr
               x={layout.x + LABEL_PAD} y={layout.y}
               fill={textColor} fontSize={13} fontWeight={700}
               dominantBaseline="middle"
-              stroke={textHalo} strokeWidth={3} paintOrder="stroke"
             >
               {node.name}
             </text>

@@ -12,6 +12,7 @@ import Badge from '../../components/atoms/Badge/Badge'
 import EmailInput from '../../components/molecules/EmailInput/EmailInput'
 import PhyloTree from '../../components/atoms/PhyloTree/PhyloTree'
 import Spinner from '../../components/atoms/Spinner/Spinner'
+import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 import api, { type AnalysisResult } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
 
@@ -137,6 +138,37 @@ const tdStyle: React.CSSProperties = {
   borderBottom: '1px solid var(--border)',
 }
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+function Skel({ h = 16, w = '100%', r = 8 }: { h?: number; w?: string | number; r?: number }) {
+  return <div className="skeleton" style={{ height: h, width: w, borderRadius: r }} />
+}
+
+function ResultDetailSkeleton() {
+  return (
+    <>
+      <PageSection title="">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Skel h={12} w={180} />
+          <Skel h={280} />
+        </div>
+      </PageSection>
+      <PageSection title="">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Skel h={12} w={140} />
+          <Skel h={36} />
+          {Array.from({ length: 5 }).map((_, i) => <Skel key={i} h={36} />)}
+        </div>
+      </PageSection>
+      <PageSection title="">
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          {Array.from({ length: 4 }).map((_, i) => <Skel key={i} h={72} w={140} />)}
+        </div>
+      </PageSection>
+    </>
+  )
+}
+
 const downloadIcon = (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -184,15 +216,12 @@ export default function ResultsPage() {
   const selectResult = (r: AnalysisResult, updateUrl = true) => {
     setEmailMsg(null)
     if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
-    if (r.status === 'complete' && !r.climatic_trees && !r.genetic_trees) {
-      setLoadingDetail(true)
-      api.results.get(r._id)
-        .then(full => setSelected(full))
-        .catch(() => setSelected(r))
-        .finally(() => setLoadingDetail(false))
-    } else {
-      setSelected(r)
-    }
+    setLoadingDetail(true)
+    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
+    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
+      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
+      : Promise.resolve(setSelected(r))
+    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
   }
 
   const handleCopyLink = () => {
@@ -263,50 +292,48 @@ export default function ResultsPage() {
     <PageContainer title={t.results_title}>
       <PageCard>
 
-        {/* ── Analysis Runs list ── */}
+        {/* ── Analysis Runs selector ── */}
         <PageSection title={t.results_analysis_runs} style={{ borderTop: 'none' }}>
           {results.length === 0 ? (
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>
               {t.results_no_results}
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {results.map(r => (
-                <div
-                  key={r._id}
-                  onClick={() => selectResult(r)}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    border: `2px solid ${selected?._id === r._id ? 'var(--action)' : 'var(--border)'}`,
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    backgroundColor: selected?._id === r._id ? 'var(--action-soft-bg)' : 'transparent',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text)' }}>{r.name}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '12px' }}>
-                      {new Date(r.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Badge>{r.status}</Badge>
-                    {r.status === 'complete' && (
-                      <Button variant="download" icon={downloadIcon} onClick={e => handleDownload(r, e)}>
-                        {t.results_excel}
-                      </Button>
-                    )}
-                  </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <SearchBar
+                options={results.map(r => ({
+                  id: r._id,
+                  label: r.name,
+                  sublabel: new Date(r.created_at).toLocaleString(),
+                  badge: r.status,
+                }))}
+                value={selected?._id ?? null}
+                onSelect={id => {
+                  const r = results.find(r => r._id === id)
+                  if (r) selectResult(r)
+                }}
+              />
+              {selected && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '2px' }}>
+                  <Badge>{selected.status}</Badge>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    {new Date(selected.created_at).toLocaleString()}
+                  </span>
+                  {selected.status === 'complete' && (
+                    <Button
+                      variant="download"
+                      icon={downloadIcon}
+                      onClick={e => handleDownload(selected, e)}
+                    >
+                      {t.results_excel}
+                    </Button>
+                  )}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </PageSection>
-
+      { loadingDetail && <ResultDetailSkeleton /> }
         {/* ── Bootstrap/Distance chart ── */}
         {selected?.status === 'complete' && chartData.length > 0 && (
           <PageSection title={`Bootstrap Mean & ${distanceCol ?? 'Distance'}`}>
@@ -408,16 +435,6 @@ export default function ResultsPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </PageSection>
-        )}
-
-        {/* ── Loading trees indicator ── */}
-        {loadingDetail && (
-          <PageSection title="">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
-              <Spinner size={24} />
-              <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{t.results_loading_trees}</span>
             </div>
           </PageSection>
         )}
