@@ -107,7 +107,6 @@ function getCytoscapeStylesheet(darkMode: boolean, layout: LayoutType) {
   const textColor = darkMode ? '#FFFFFF' : '#1A1C1E'
   const lineColor = darkMode ? '#9F74D0' : '#B593DD'
   const nodeColor = darkMode ? '#1FA391' : '#2DD4BF'
-  const labelBg = darkMode ? '#2a2a3a' : '#ffffff'
   const isForce = layout === 'force' || layout === 'force-loose'
 
   return [
@@ -143,10 +142,7 @@ function getCytoscapeStylesheet(darkMode: boolean, layout: LayoutType) {
         'text-margin-y': isForce ? 4 : 0,
         'background-color': nodeColor,
         'font-size': 11,
-        'text-background-color': labelBg,
-        'text-background-opacity': 0.85,
-        'text-background-padding': '2px',
-        'text-background-shape': 'round-rectangle',
+        'text-background-opacity': 0,
       },
     },
   ]
