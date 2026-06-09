@@ -130,6 +130,9 @@ const thStyle: React.CSSProperties = {
   backgroundColor: 'var(--secondary)',
   borderBottom: '1px solid var(--border)',
   whiteSpace: 'nowrap',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 }
 
 const tdStyle: React.CSSProperties = {
@@ -389,8 +392,8 @@ export default function ResultsPage() {
 
         {/* ── Results table ── */}
         {selected?.status === 'complete' && mainRows.length > 0 && (
-          <PageSection title={`${t.results_output}: ${selected.name}`}>
-            <div style={{ width: '100%', borderRadius: '12px', overflow: 'auto', border: '1px solid var(--border)' }}>
+          <PageSection title={`${t.results_output}: ${selected.name} (${mainRows.length} rows)`}>
+            <div style={{ width: '100%', borderRadius: '12px', overflow: 'auto', maxHeight: '480px', border: '1px solid var(--border)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
                 <thead>
                   <tr>
