@@ -11,6 +11,7 @@ import Button from '../../components/atoms/Button/Button'
 import Badge from '../../components/atoms/Badge/Badge'
 import EmailInput from '../../components/molecules/EmailInput/EmailInput'
 import PhyloTree from '../../components/atoms/PhyloTree/PhyloTree'
+import TreePagination from '../../components/molecules/Pagination/Pagination'
 import Spinner from '../../components/atoms/Spinner/Spinner'
 import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 import api, { type AnalysisResult } from '../../services/api'
@@ -442,22 +443,22 @@ export default function ResultsPage() {
         {/* ── Climatic Trees ── */}
         {selected?.status === 'complete' && selected.climatic_trees && Object.keys(selected.climatic_trees).length > 0 && (
           <PageSection title={t.results_climatic_trees}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '24px' }}>
-              {Object.entries(selected.climatic_trees).map(([treeName, newick]) => (
-                <PhyloTree key={treeName} newick={newick} name={treeName} />
-              ))}
-            </div>
+            <TreePagination
+              key={`${selected._id}-climatic`}
+              trees={Object.entries(selected.climatic_trees).map(([name, newick]) => ({ name, newick }))}
+              renderTree={(name, newick) => <PhyloTree key={name} newick={newick} name={name} />}
+            />
           </PageSection>
         )}
 
         {/* ── Genetic Trees ── */}
         {selected?.status === 'complete' && selected.genetic_trees && Object.keys(selected.genetic_trees).length > 0 && (
           <PageSection title={t.results_genetic_trees}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '24px' }}>
-              {Object.entries(selected.genetic_trees).map(([treeName, newick]) => (
-                <PhyloTree key={treeName} newick={newick} name={treeName} />
-              ))}
-            </div>
+            <TreePagination
+              key={`${selected._id}-genetic`}
+              trees={Object.entries(selected.genetic_trees).map(([name, newick]) => ({ name, newick }))}
+              renderTree={(name, newick) => <PhyloTree key={name} newick={newick} name={name} />}
+            />
           </PageSection>
         )}
 
