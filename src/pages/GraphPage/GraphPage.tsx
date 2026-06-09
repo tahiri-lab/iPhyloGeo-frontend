@@ -10,6 +10,7 @@ import { useLang } from '../../context/LanguageContext'
 import { parseNewick, type TreeNode } from '../../utils/newickParser'
 import { type LayoutType, LAYOUTS, getLayoutConfig } from '../../constants/layoutConfig'
 import { zoomBtnStyle, selectStyle } from '../../styles/commonStyles'
+import TreePagination from '../../components/molecules/Pagination/Pagination'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -337,17 +338,14 @@ export default function GraphPage() {
 
           {selected && activeTrees && Object.keys(activeTrees).length > 0 && (
             <PageSection title={treeTab === 'climatic' ? t.results_climatic_trees : t.results_genetic_trees}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '24px' }}>
-                {Object.entries(activeTrees).map(([treeName, newick]) => (
-                  <TreeGraph
-                    key={`${treeName}-${layout}`}
-                    newick={newick}
-                    name={treeName}
-                    layout={layout}
-                    darkMode={darkMode}
-                  />
-                ))}
-              </div>
+              <TreePagination
+                key={`${selected._id}-${treeTab}-${layout}`}
+                trees={Object.entries(activeTrees).map(([name, newick]) => ({ name, newick }))}
+                renderTree={(name, newick) => (
+                  <TreeGraph key={`${name}-${layout}`} newick={newick} name={name} layout={layout} darkMode={darkMode} />
+                )}
+                minItemWidth={440}
+              />
             </PageSection>
           )}
 
