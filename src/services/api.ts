@@ -128,13 +128,36 @@ export const results = {
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
+export interface AnalysisSettings {
+  bootstrap_threshold: number;
+  dist_threshold: number;
+  window_size: number;
+  step_size: number;
+  alignment_method: "NoAlignment" | "PairwiseAlign" | "MUSCLE" | "CLUSTALW" | "MAFFT";
+  distance_method: "All" | "LeastSquare" | "RobinsonFoulds" | "Bipartition";
+  fit_method: "WiderFit" | "NarrowFit";
+  tree_type: "BioPython" | "Fast Tree";
+  rate_similarity: number;
+  method_similarity: "Hamming" | "Levenshtein" | "DamerauLevenshtein" | "Jaro" | "JaroWinkler" | "SmithWaterman" | "Jaccard" | "SorensenDice";
+  preprocessing_genetic: "Disabled" | "Enabled";
+  preprocessing_climatic: "Disabled" | "Enabled";
+  preprocessing_threshold_genetic: number;
+  preprocessing_threshold_climatic: number;
+  correlation_climatic_enabled: "Disabled" | "Enabled";
+  correlation_threshold_climatic: number;
+  permutations_mantel_test: number;
+  permutations_protest: number;
+  mantel_test_method: "Pearson" | "Spearman" | "KendallTau";
+  statistical_test: "Both" | "MantelTest" | "Procrustes" | "None";
+}
+
 export const settings = {
   /** Get current analysis settings. */
-  get: () => request<Record<string, unknown>>("/api/settings"),
+  get: () => request<AnalysisSettings>("/api/settings"),
 
-  /** Overwrite analysis settings. */
-  update: (body: Record<string, unknown>) =>
-    request<Record<string, unknown>>("/api/settings", {
+  /** Overwrite analysis settings. Validated server-side against the settings schema. */
+  update: (body: AnalysisSettings) =>
+    request<AnalysisSettings>("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
