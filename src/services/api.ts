@@ -107,13 +107,18 @@ export interface ResultsPage {
 }
 
 export const results = {
-  /** List persisted results. Returns a paginated envelope { data, total, skip, limit }. */
-  list: (params?: { limit?: number; skip?: number }) => {
+  /** List persisted results. Returns a paginated envelope { data, total, skip, limit }.
+   *  Normalises the legacy plain-array response from older backend versions. */
+  list: async (params?: { limit?: number; skip?: number }): Promise<ResultsPage> => {
     const q = new URLSearchParams();
     if (params?.limit !== undefined) q.set("limit", String(params.limit));
     if (params?.skip !== undefined) q.set("skip", String(params.skip));
     const qs = q.toString();
-    return request<ResultsPage>(`/api/results${qs ? `?${qs}` : ""}`);
+    const res = await request<ResultsPage | AnalysisResult[]>(`/api/results${qs ? `?${qs}` : ""}`);
+    if (Array.isArray(res)) {
+      return { data: res, total: res.length, skip: 0, limit: res.length };
+    }
+    return res;
   },
 
   /** Get a single result by ID. */
