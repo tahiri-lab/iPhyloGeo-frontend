@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import api from '../../services/api'
+import api, { type AnalysisSettings } from '../../services/api'
 import PageContainer from '../../components/templates/PageContainer/PageContainer'
 import PageCard from '../../components/organisms/PageCard/PageCard'
 import PageSection from '../../components/organisms/PageSection/PageSection'
@@ -10,7 +10,7 @@ import { useLang } from '../../context/LanguageContext'
 
 export default function SettingsPage() {
   const { t } = useLang()
-  const [settings, setSettings] = useState<Record<string, unknown>>({})
+  const [settings, setSettings] = useState<Partial<AnalysisSettings>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
@@ -22,22 +22,26 @@ export default function SettingsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const set = (key: string, value: unknown) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+  const set = (key: keyof AnalysisSettings, value: unknown) => {
+    setSettings(prev => ({ ...prev, [key]: value } as Partial<AnalysisSettings>))
     setMessage(null)
   }
 
-  const num = (key: string, fallback: number) =>
-    typeof settings[key] === 'number' ? String(settings[key]) : String(fallback)
+  const num = (key: keyof AnalysisSettings, fallback: number) => {
+    const v = settings[key]
+    return typeof v === 'number' ? String(v) : String(fallback)
+  }
 
-  const str = (key: string, fallback: string) =>
-    typeof settings[key] === 'string' ? (settings[key] as string) : fallback
+  const str = (key: keyof AnalysisSettings, fallback: string) => {
+    const v = settings[key]
+    return typeof v === 'string' ? v : fallback
+  }
 
   const handleSave = async () => {
     setSaving(true)
     setMessage(null)
     try {
-      await api.settings.update(settings)
+      await api.settings.update(settings as AnalysisSettings)
       setMessage({ text: t.settings_saved, ok: true })
     } catch (e) {
       setMessage({ text: `Failed to save: ${e instanceof Error ? e.message : String(e)}`, ok: false })

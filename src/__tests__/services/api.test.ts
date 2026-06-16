@@ -80,17 +80,17 @@ describe('API client', () => {
   // ── Results ───────────────────────────────────────────────────────────────
 
   describe('results.list', () => {
-    it('fetches and returns an array of results', async () => {
-      mockOk([{ _id: '1', name: 'Run A' }, { _id: '2', name: 'Run B' }])
-      const list = await api.results.list()
+    it('fetches and returns a paginated envelope with a data array', async () => {
+      mockOk({ data: [{ _id: '1', name: 'Run A' }, { _id: '2', name: 'Run B' }], total: 2, skip: 0, limit: 50 })
+      const { data: list } = await api.results.list()
       expect(list).toHaveLength(2)
       expect(list[0]._id).toBe('1')
       expect(list[1].name).toBe('Run B')
     })
 
-    it('returns an empty array when no results exist', async () => {
-      mockOk([])
-      const list = await api.results.list()
+    it('returns an empty data array when no results exist', async () => {
+      mockOk({ data: [], total: 0, skip: 0, limit: 50 })
+      const { data: list } = await api.results.list()
       expect(list).toHaveLength(0)
     })
   })
@@ -150,7 +150,7 @@ describe('API client', () => {
   describe('settings.update', () => {
     it('sends a PUT request with the updated settings', async () => {
       mockOk({ bootstrap_threshold: 25 })
-      const s = await api.settings.update({ bootstrap_threshold: 25 })
+      const s = await api.settings.update({ bootstrap_threshold: 25 } as unknown as Parameters<typeof api.settings.update>[0])
       expect(s['bootstrap_threshold']).toBe(25)
       expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining('/api/settings'),
