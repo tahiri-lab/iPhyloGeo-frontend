@@ -246,8 +246,8 @@ export default function GraphPage() {
   }
 
   useEffect(() => {
-    api.results.list()
-      .then(data => {
+    api.results.list({ limit: 200 })
+      .then(({ data }) => {
         const complete = data.filter(r => r.status === 'complete')
         setResults(complete)
         if (complete.length > 0) loadResult(complete[0])

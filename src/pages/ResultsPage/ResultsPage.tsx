@@ -204,8 +204,8 @@ export default function ResultsPage() {
   const { t } = useLang()
 
   useEffect(() => {
-    api.results.list()
-      .then(data => {
+    api.results.list({ limit: 200 })
+      .then(({ data }) => {
         setResults(data)
         const idFromUrl = initialIdRef.current
         const target = idFromUrl
