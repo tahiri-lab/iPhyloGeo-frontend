@@ -99,9 +99,22 @@ export const jobs = {
 
 // ── Results ───────────────────────────────────────────────────────────────────
 
+export interface ResultsPage {
+  data: AnalysisResult[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
 export const results = {
-  /** List all persisted results. */
-  list: () => request<AnalysisResult[]>("/api/results"),
+  /** List persisted results. Returns a paginated envelope { data, total, skip, limit }. */
+  list: (params?: { limit?: number; skip?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.limit !== undefined) q.set("limit", String(params.limit));
+    if (params?.skip !== undefined) q.set("skip", String(params.skip));
+    const qs = q.toString();
+    return request<ResultsPage>(`/api/results${qs ? `?${qs}` : ""}`);
+  },
 
   /** Get a single result by ID. */
   get: (id: string) => request<AnalysisResult>(`/api/results/${id}`),
