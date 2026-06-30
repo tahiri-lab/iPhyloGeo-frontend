@@ -10,7 +10,7 @@ const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http:
 // ── Internal helper ───────────────────────────────────────────────────────────
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, init);
+  const res = await fetch(`${BASE}${path}`, { credentials: "include", ...init });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error((body as { detail?: string }).detail ?? `HTTP ${res.status}`);
@@ -130,7 +130,7 @@ export const results = {
 
   /** Download result as an Excel file. Returns a Blob. */
   download: async (id: string): Promise<Blob> => {
-    const res = await fetch(`${BASE}/api/results/${id}/download`);
+    const res = await fetch(`${BASE}/api/results/${id}/download`, { credentials: "include" });
     if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
     return res.blob();
   },
