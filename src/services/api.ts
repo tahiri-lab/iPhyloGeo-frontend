@@ -7,6 +7,25 @@
 
 const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
+// ── Local result store (Safari-safe alternative to cross-origin cookies) ──────
+
+const RESULT_IDS_KEY = "iphylogeo_result_ids";
+
+function getStoredIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RESULT_IDS_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function addStoredId(id: string): void {
+  const ids = getStoredIds();
+  if (!ids.includes(id)) {
+    localStorage.setItem(RESULT_IDS_KEY, JSON.stringify([...ids, id]));
+  }
+}
+
 // ── Internal helper ───────────────────────────────────────────────────────────
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -85,12 +104,15 @@ export const upload = {
 
 export const jobs = {
   /** Create a new analysis job and start the pipeline. Returns result_id. */
-  create: (body: CreateJobRequest) =>
-    request<{ result_id: string }>("/api/jobs", {
+  create: async (body: CreateJobRequest) => {
+    const result = await request<{ result_id: string }>("/api/jobs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }),
+    });
+    addStoredId(result.result_id);
+    return result;
+  },
 
   /** Poll the status + progress of a running job. */
   status: (resultId: string) =>
@@ -113,6 +135,8 @@ export const results = {
     const q = new URLSearchParams();
     if (params?.limit !== undefined) q.set("limit", String(params.limit));
     if (params?.skip !== undefined) q.set("skip", String(params.skip));
+    const storedIds = getStoredIds();
+    if (storedIds.length > 0) q.set("ids", storedIds.join(","));
     const qs = q.toString();
     const res = await request<ResultsPage | AnalysisResult[]>(`/api/results${qs ? `?${qs}` : ""}`);
     if (Array.isArray(res)) {
@@ -122,7 +146,11 @@ export const results = {
   },
 
   /** Get a single result by ID. */
-  get: (id: string) => request<AnalysisResult>(`/api/results/${id}`),
+  get: async (id: string) => {
+    const result = await request<AnalysisResult>(`/api/results/${id}`);
+    addStoredId(id);
+    return result;
+  },
 
   /** Delete a result. */
   delete: (id: string) =>
