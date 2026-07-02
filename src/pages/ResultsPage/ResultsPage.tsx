@@ -204,14 +204,25 @@ export default function ResultsPage() {
   const { t } = useLang()
 
   useEffect(() => {
+    const idFromUrl = initialIdRef.current
     api.results.list({ limit: 200 })
       .then(({ data }) => {
         setResults(data)
-        const idFromUrl = initialIdRef.current
         const target = idFromUrl
           ? data.find(r => r._id === idFromUrl)
           : data.find(r => r.status === 'complete')
-        if (target) selectResult(target, !idFromUrl)
+        if (target) {
+          selectResult(target, !idFromUrl)
+        } else if (idFromUrl) {
+          setLoadingDetail(true)
+          api.results.get(idFromUrl)
+            .then(result => {
+              setResults(prev => [...prev, result])
+              selectResult(result, false)
+            })
+            .catch(() => setError('Result not found'))
+            .finally(() => setLoadingDetail(false))
+        }
       })
       .catch(e => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false))
