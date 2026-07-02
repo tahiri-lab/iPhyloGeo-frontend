@@ -147,9 +147,11 @@ export default function SettingsPage() {
                 onChange={e => set('alignment_method', e.target.value)}
                 style={selectStyle}
               >
+                <option value="NoAlignment">NoAlignment</option>
                 <option value="PairwiseAlign">PairwiseAlign</option>
-                <option value="ClustalW">ClustalW</option>
-                <option value="Muscle">Muscle</option>
+                <option value="MUSCLE">MUSCLE</option>
+                <option value="CLUSTALW">CLUSTALW</option>
+                <option value="MAFFT">MAFFT</option>
               </select>
             </PageField>
             <PageField label={t.settings_distance_method}>
@@ -158,8 +160,10 @@ export default function SettingsPage() {
                 onChange={e => set('distance_method', e.target.value)}
                 style={selectStyle}
               >
+                <option value="All">All</option>
                 <option value="LeastSquare">LeastSquare</option>
                 <option value="RobinsonFoulds">RobinsonFoulds</option>
+                <option value="Bipartition">Bipartition</option>
               </select>
             </PageField>
             <PageField label={t.settings_fit_method}>
@@ -169,7 +173,7 @@ export default function SettingsPage() {
                 style={selectStyle}
               >
                 <option value="WiderFit">WiderFit</option>
-                <option value="StrictFit">StrictFit</option>
+                <option value="NarrowFit">NarrowFit</option>
               </select>
             </PageField>
             <PageField label={t.settings_tree_type}>
@@ -179,7 +183,7 @@ export default function SettingsPage() {
                 style={selectStyle}
               >
                 <option value="BioPython">BioPython</option>
-                <option value="RAxML">RAxML</option>
+                <option value="Fast Tree">Fast Tree</option>
               </select>
             </PageField>
             <PageField label={t.settings_similarity_method}>
@@ -190,6 +194,12 @@ export default function SettingsPage() {
               >
                 <option value="Hamming">Hamming</option>
                 <option value="Levenshtein">Levenshtein</option>
+                <option value="DamerauLevenshtein">DamerauLevenshtein</option>
+                <option value="Jaro">Jaro</option>
+                <option value="JaroWinkler">JaroWinkler</option>
+                <option value="SmithWaterman">SmithWaterman</option>
+                <option value="Jaccard">Jaccard</option>
+                <option value="SorensenDice">SorensenDice</option>
               </select>
             </PageField>
             <PageField label={t.settings_statistical_test}>
@@ -199,8 +209,9 @@ export default function SettingsPage() {
                 style={selectStyle}
               >
                 <option value="Both">Both</option>
-                <option value="Mantel">Mantel</option>
-                <option value="Protest">Protest</option>
+                <option value="MantelTest">MantelTest</option>
+                <option value="Procrustes">Procrustes</option>
+                <option value="None">None</option>
               </select>
             </PageField>
             <PageField label={t.settings_mantel_method}>
@@ -211,6 +222,7 @@ export default function SettingsPage() {
               >
                 <option value="Pearson">Pearson</option>
                 <option value="Spearman">Spearman</option>
+                <option value="KendallTau">KendallTau</option>
               </select>
             </PageField>
           </PageGrid>
