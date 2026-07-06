@@ -114,6 +114,7 @@ export default function UploadPage() {
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
   const [emailSent, setEmailSent] = useState(false)
+  const notifyEmailRef = useRef<string | null>(null)
 
   // Settings
   const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
@@ -214,6 +215,7 @@ export default function UploadPage() {
     setJobStatus(null)
     setResultId(null)
     setEmailSent(false)
+    notifyEmailRef.current = null
     try {
       const { result_id } = await api.jobs.create({
         climatic_file_id: climaticId,
@@ -228,6 +230,9 @@ export default function UploadPage() {
           const status = await api.jobs.status(result_id)
           setJobStatus(status)
           if (status.status === 'complete') {
+            if (notifyEmailRef.current && result_id) {
+              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => {})
+            }
             navigate('/results')
           } else if (status.status === 'error') {
             setError(status.error ?? 'Pipeline failed')
@@ -247,14 +252,9 @@ export default function UploadPage() {
     }
   }
 
-  const handleEmailSubmit = async (email: string) => {
-    if (!resultId) return
-    try {
-      await api.results.email(resultId, email, lang)
-      setEmailSent(true)
-    } catch {
-      // silently ignore — job still runs
-    }
+  const handleEmailSubmit = (email: string) => {
+    notifyEmailRef.current = email
+    setEmailSent(true)
   }
 
   return (
