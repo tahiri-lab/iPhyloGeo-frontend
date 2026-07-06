@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   ComposedChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -14,7 +14,8 @@ import PhyloTree from '../../components/atoms/PhyloTree/PhyloTree'
 import TreePagination from '../../components/molecules/Pagination/Pagination'
 import Spinner from '../../components/atoms/Spinner/Spinner'
 import SearchBar from '../../components/molecules/SearchBar/SearchBar'
-import api, { type AnalysisResult } from '../../services/api'
+import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
+import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -188,6 +189,104 @@ const linkIcon = (
   </svg>
 )
 
+// ── Result actions dropdown ───────────────────────────────────────────────────
+
+type ConfigPanelMode = 'view' | 'edit'
+
+interface ConfigPanel {
+  mode: ConfigPanelMode
+  settings: Partial<AnalysisSettings>
+}
+
+function ActionsMenu({
+  onDelete,
+  onViewConfig,
+  onEditConfig,
+}: {
+  onDelete: () => void
+  onViewConfig: () => void
+  onEditConfig: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const { t } = useLang()
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const itemStyle: React.CSSProperties = {
+    display: 'block',
+    width: '100%',
+    padding: '8px 14px',
+    textAlign: 'left',
+    background: 'transparent',
+    border: 'none',
+    fontSize: '13px',
+    color: 'var(--text)',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  }
+
+  const deleteItemStyle: React.CSSProperties = {
+    ...itemStyle,
+    color: 'var(--error)',
+  }
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '6px 10px',
+          fontSize: '16px',
+          color: 'var(--text-secondary)',
+          cursor: 'pointer',
+          lineHeight: 1,
+        }}
+        title="Actions"
+      >
+        ⋯
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: 'calc(100% + 4px)',
+          background: 'var(--primary)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          zIndex: 100,
+          minWidth: '180px',
+          overflow: 'hidden',
+        }}>
+          <button style={itemStyle} onClick={() => { onViewConfig(); setOpen(false) }}>
+            {t.results_view_config}
+          </button>
+          <button style={itemStyle} onClick={() => { onEditConfig(); setOpen(false) }}>
+            {t.results_edit_config}
+          </button>
+          <div style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
+          <button style={deleteItemStyle} onClick={() => { onDelete(); setOpen(false) }}>
+            {t.results_delete}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function ResultsPage() {
@@ -199,9 +298,17 @@ export default function ResultsPage() {
   const [emailMsg, setEmailMsg] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
+  const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
+  const [rerunning, setRerunning] = useState(false)
+  const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
+
+  useEffect(() => {
+    api.settings.get().then(s => setGlobalSettings(s)).catch(() => {})
+  }, [])
   const chartRef = useRef<HTMLDivElement>(null)
   const initialIdRef = useRef(searchParams.get('id'))
   const { t } = useLang()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const idFromUrl = initialIdRef.current
@@ -230,6 +337,8 @@ export default function ResultsPage() {
 
   const selectResult = (r: AnalysisResult, updateUrl = true) => {
     setEmailMsg(null)
+    setConfigPanel(null)
+    setSelected(null)
     if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
     setLoadingDetail(true)
     const minDelay = new Promise<void>(res => setTimeout(res, 2000))
@@ -237,6 +346,35 @@ export default function ResultsPage() {
       ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
       : Promise.resolve(setSelected(r))
     Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
+  }
+
+  const handleDelete = async (r: AnalysisResult) => {
+    try {
+      await api.results.delete(r._id)
+      setResults(prev => prev.filter(x => x._id !== r._id))
+      if (selected?._id === r._id) {
+        setSelected(null)
+        setConfigPanel(null)
+      }
+    } catch (err) {
+      alert(`Delete failed: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  const handleRerun = async () => {
+    if (!selected || !configPanel) return
+    setRerunning(true)
+    try {
+      const { result_id } = await api.results.rerun(selected._id, configPanel.settings)
+      const newResult = await api.results.get(result_id)
+      setResults(prev => [newResult, ...prev])
+      setConfigPanel(null)
+      navigate(`/results?id=${result_id}`)
+    } catch (err) {
+      alert(`Re-run failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setRerunning(false)
+    }
   }
 
   const handleCopyLink = () => {
@@ -343,12 +481,66 @@ export default function ResultsPage() {
                       {t.results_excel}
                     </Button>
                   )}
+                  <div style={{ marginLeft: 'auto' }}>
+                    <ActionsMenu
+                      onDelete={() => handleDelete(selected)}
+                      onViewConfig={() => setConfigPanel({ mode: 'view', settings: selected.settings ?? {} })}
+                      onEditConfig={() => setConfigPanel({
+                        mode: 'edit',
+                        settings: { ...(Object.keys(selected.settings ?? {}).length > 0 ? selected.settings! : globalSettings) },
+                      })}
+                    />
+                  </div>
                 </div>
               )}
             </div>
           )}
         </PageSection>
-      { loadingDetail && <ResultDetailSkeleton /> }
+
+        {/* ── Config panel (view or edit) ── */}
+        {selected && configPanel && (
+          <PageSection title={configPanel.mode === 'view' ? t.results_view_config : t.results_edit_config}>
+            {configPanel.mode === 'view' && Object.keys(configPanel.settings).length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+                No configuration saved for this analysis.
+              </p>
+            ) : (
+              <AnalysisSettingsForm
+                settings={configPanel.settings}
+                onChange={(key, value) => {
+                  if (configPanel.mode === 'edit') {
+                    setConfigPanel(prev => prev ? { ...prev, settings: { ...prev.settings, [key]: value } } : null)
+                  }
+                }}
+                readOnly={configPanel.mode === 'view'}
+              />
+            )}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfigPanel(null)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  color: 'var(--text)',
+                  cursor: 'pointer',
+                }}
+              >
+                {t.results_config_cancel}
+              </button>
+              {configPanel.mode === 'edit' && (
+                <Button variant="actions" onClick={handleRerun} disabled={rerunning}>
+                  {rerunning ? t.results_rerunning : t.results_rerun}
+                </Button>
+              )}
+            </div>
+          </PageSection>
+        )}
+
+        { loadingDetail && <ResultDetailSkeleton /> }
+
         {/* ── Bootstrap/Distance chart ── */}
         {selected?.status === 'complete' && chartData.length > 0 && (
           <PageSection title={`Bootstrap Mean & ${distanceCol ?? 'Distance'}`}>
