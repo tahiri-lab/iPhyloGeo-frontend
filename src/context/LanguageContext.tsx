@@ -9,9 +9,19 @@ export interface Translations {
   nav_settings: string
   nav_results: string
   nav_graph: string
+  nav_compare: string
   nav_dark_mode: string
   nav_light_mode: string
   nav_language: string
+  // Compare page
+  compare_title: string
+  compare_select_analyses: string
+  compare_analysis_a: string
+  compare_analysis_b: string
+  compare_select_both: string
+  compare_configuration: string
+  compare_climatic_params: string
+  compare_genetic_params: string
   // Results page
   results_title: string
   results_analysis_runs: string
@@ -128,9 +138,18 @@ const translations: Record<Lang, Translations> = {
     nav_settings: 'Settings',
     nav_results: 'Results',
     nav_graph: 'Graph View',
+    nav_compare: 'Compare',
     nav_dark_mode: 'Dark mode',
     nav_light_mode: 'Light mode',
     nav_language: 'Language',
+    compare_title: 'Compare Analyses',
+    compare_select_analyses: 'Select Analyses',
+    compare_analysis_a: 'Analysis A',
+    compare_analysis_b: 'Analysis B',
+    compare_select_both: 'Select two completed analyses to compare.',
+    compare_configuration: 'Configuration',
+    compare_climatic_params: 'Climatic Parameters',
+    compare_genetic_params: 'Genetic Parameters',
     results_title: 'Results',
     results_analysis_runs: 'Analysis Runs',
     results_no_results: 'No results yet. Upload files and run an analysis first.',
@@ -236,9 +255,18 @@ const translations: Record<Lang, Translations> = {
     nav_settings: 'Paramètres',
     nav_results: 'Résultats',
     nav_graph: 'Vue graphique',
+    nav_compare: 'Comparer',
     nav_dark_mode: 'Mode sombre',
     nav_light_mode: 'Mode clair',
     nav_language: 'Langue',
+    compare_title: 'Comparer les analyses',
+    compare_select_analyses: 'Sélectionner les analyses',
+    compare_analysis_a: 'Analyse A',
+    compare_analysis_b: 'Analyse B',
+    compare_select_both: 'Sélectionnez deux analyses terminées pour les comparer.',
+    compare_configuration: 'Configuration',
+    compare_climatic_params: 'Paramètres climatiques',
+    compare_genetic_params: 'Paramètres génétiques',
     results_title: 'Résultats',
     results_analysis_runs: 'Analyses effectuées',
     results_no_results: "Aucun résultat pour l'instant. Importez des fichiers et lancez une analyse.",
@@ -343,9 +371,19 @@ const translations: Record<Lang, Translations> = {
     nav_upload: 'Cargar',
     nav_settings: 'Ajustes',
     nav_results: 'Resultados',
+    nav_graph: 'Vista de grafo',
+    nav_compare: 'Comparar',
     nav_dark_mode: 'Modo oscuro',
     nav_light_mode: 'Modo claro',
     nav_language: 'Idioma',
+    compare_title: 'Comparar análisis',
+    compare_select_analyses: 'Seleccionar análisis',
+    compare_analysis_a: 'Análisis A',
+    compare_analysis_b: 'Análisis B',
+    compare_select_both: 'Selecciona dos análisis completados para compararlos.',
+    compare_configuration: 'Configuración',
+    compare_climatic_params: 'Parámetros climáticos',
+    compare_genetic_params: 'Parámetros genéticos',
     results_title: 'Resultados',
     results_analysis_runs: 'Análisis realizados',
     results_no_results: 'Sin resultados aún. Sube archivos y ejecuta un análisis primero.',
@@ -444,7 +482,6 @@ const translations: Record<Lang, Translations> = {
     settings_help_distance: 'Distancia máxima de Robinson-Foulds para considerar dos árboles similares.',
     btn_download: 'Descargar',
     btn_send: 'Enviar',
-    nav_graph: 'Vista de grafo'
   },
 }
 
