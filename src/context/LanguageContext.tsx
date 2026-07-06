@@ -126,6 +126,19 @@ export interface Translations {
   settings_help_bootstrap: string
   settings_help_window: string
   settings_help_distance: string
+  // Upload page additions
+  upload_analysis_name: string
+  upload_name_taken: string
+  upload_settings_section: string
+  upload_settings_show: string
+  upload_settings_hide: string
+  // Results page additions
+  results_delete: string
+  results_view_config: string
+  results_edit_config: string
+  results_rerun: string
+  results_rerunning: string
+  results_config_cancel: string
   // Shared
   btn_download: string
   btn_send: string
@@ -246,6 +259,17 @@ const translations: Record<Lang, Translations> = {
     settings_help_bootstrap: 'Minimum bootstrap support value to retain a branch. Typical values: 10–70.',
     settings_help_window: 'Sliding-window parameters for the sequence analysis. Smaller windows give finer resolution; larger steps speed up computation.',
     settings_help_distance: 'Maximum Robinson-Foulds distance to consider two trees similar.',
+    upload_analysis_name: 'Analysis name',
+    upload_name_taken: 'A result with this name already exists',
+    upload_settings_section: 'Analysis Settings',
+    upload_settings_show: 'Configure Settings ▼',
+    upload_settings_hide: 'Hide Settings ▲',
+    results_delete: 'Delete',
+    results_view_config: 'View Configuration',
+    results_edit_config: 'Edit Configuration',
+    results_rerun: 'Re-run with new settings',
+    results_rerunning: 'Re-running…',
+    results_config_cancel: 'Cancel',
     btn_download: 'Download',
     btn_send: 'Send',
   },
@@ -363,6 +387,17 @@ const translations: Record<Lang, Translations> = {
     settings_help_bootstrap: 'Valeur minimale de support bootstrap pour conserver une branche. Valeurs typiques : 10–70.',
     settings_help_window: "Paramètres de fenêtre glissante pour l'analyse des séquences. Des fenêtres plus petites donnent une résolution plus fine ; des pas plus grands accélèrent le calcul.",
     settings_help_distance: 'Distance maximale de Robinson-Foulds pour considérer deux arbres similaires.',
+    upload_analysis_name: "Nom de l'analyse",
+    upload_name_taken: 'Un résultat avec ce nom existe déjà',
+    upload_settings_section: "Paramètres d'analyse",
+    upload_settings_show: 'Configurer les paramètres ▼',
+    upload_settings_hide: 'Masquer les paramètres ▲',
+    results_delete: 'Supprimer',
+    results_view_config: 'Voir la configuration',
+    results_edit_config: 'Modifier la configuration',
+    results_rerun: 'Relancer avec de nouveaux paramètres',
+    results_rerunning: 'Relancement…',
+    results_config_cancel: 'Annuler',
     btn_download: 'Télécharger',
     btn_send: 'Envoyer',
   },
@@ -480,6 +515,17 @@ const translations: Record<Lang, Translations> = {
     settings_help_bootstrap: 'Valor mínimo de soporte bootstrap para conservar una rama. Valores típicos: 10–70.',
     settings_help_window: 'Parámetros de ventana deslizante para el análisis de secuencias. Ventanas más pequeñas dan mayor resolución; pasos más grandes aceleran el cálculo.',
     settings_help_distance: 'Distancia máxima de Robinson-Foulds para considerar dos árboles similares.',
+    upload_analysis_name: 'Nombre del análisis',
+    upload_name_taken: 'Ya existe un resultado con este nombre',
+    upload_settings_section: 'Configuración del análisis',
+    upload_settings_show: 'Configurar ajustes ▼',
+    upload_settings_hide: 'Ocultar ajustes ▲',
+    results_delete: 'Eliminar',
+    results_view_config: 'Ver configuración',
+    results_edit_config: 'Editar configuración',
+    results_rerun: 'Re-ejecutar con nuevos ajustes',
+    results_rerunning: 'Re-ejecutando…',
+    results_config_cancel: 'Cancelar',
     btn_download: 'Descargar',
     btn_send: 'Enviar',
   },

@@ -145,14 +145,14 @@ function SettingsDiff({
   labelB,
   wide,
 }: {
-  settingsA: AnalysisSettings | null
-  settingsB: AnalysisSettings | null
+  settingsA: Partial<AnalysisSettings> | null
+  settingsB: Partial<AnalysisSettings> | null
   labelA: string
   labelB: string
   wide: boolean
 }) {
-  if (!settingsA || !settingsB) {
-    return <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
+  if (!settingsA || !settingsB || Object.keys(settingsA).length === 0 || Object.keys(settingsB).length === 0) {
+    return <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>No configuration saved for these analyses.</p>
   }
 
   return (
@@ -351,7 +351,6 @@ export default function ComparePage() {
   const wide = useContainerWide(containerRef)
 
   const [allResults, setAllResults] = useState<AnalysisResult[]>([])
-  const [settings, setSettings] = useState<AnalysisSettings | null>(null)
   const [loadingList, setLoadingList] = useState(true)
   const [loadingA, setLoadingA] = useState(false)
   const [loadingB, setLoadingB] = useState(false)
@@ -360,13 +359,9 @@ export default function ComparePage() {
   const { t } = useLang()
 
   useEffect(() => {
-    Promise.all([
-      api.results.list({ limit: 200 }),
-      api.settings.get(),
-    ]).then(([{ data }, s]) => {
-      setAllResults(data)
-      setSettings(s)
-    }).finally(() => setLoadingList(false))
+    api.results.list({ limit: 200 })
+      .then(({ data }) => setAllResults(data))
+      .finally(() => setLoadingList(false))
   }, [])
 
   async function selectSide(id: string, side: 'A' | 'B') {
@@ -460,8 +455,8 @@ export default function ComparePage() {
           {bothComplete && (
             <PageSection title={t.compare_configuration}>
               <SettingsDiff
-                settingsA={settings}
-                settingsB={settings}
+                settingsA={resultA?.settings ?? null}
+                settingsB={resultB?.settings ?? null}
                 labelA={labelA}
                 labelB={labelB}
                 wide={wide}

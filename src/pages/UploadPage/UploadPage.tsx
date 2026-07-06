@@ -1,6 +1,6 @@
-import { useState, useRef, type DragEvent, type ChangeEvent } from 'react'
+import { useState, useRef, useEffect, type DragEvent, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api, { type JobStatus, type ClimaticPreview, type GeneticPreview } from '../../services/api'
+import api, { type JobStatus, type ClimaticPreview, type GeneticPreview, type AnalysisSettings } from '../../services/api'
 import PageContainer from '../../components/templates/PageContainer/PageContainer'
 import PageCard from '../../components/organisms/PageCard/PageCard'
 import PageSection from '../../components/organisms/PageSection/PageSection'
@@ -10,6 +10,8 @@ import { useLang } from '../../context/LanguageContext'
 import { HelpSection, HelpHeading, HelpText } from '../../components/molecules/HelpSection/HelpSection'
 import ClimateChartBuilder from '../../components/molecules/ClimateChartBuilder/ClimateChartBuilder'
 import AlignmentViewer from '../../components/molecules/AlignmentViewer/AlignmentViewer'
+import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
+import { inputStyle } from '../../components/atoms/PageGrid/PageGrid'
 
 interface UploadedFile {
   name: string
@@ -113,8 +115,43 @@ export default function UploadPage() {
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
   const [emailSent, setEmailSent] = useState(false)
 
+  // Settings
+  const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Analysis name + duplicate check
+  const [analysisName, setAnalysisName] = useState('')
+  const [nameTaken, setNameTaken] = useState(false)
+  const [checkingName, setCheckingName] = useState(false)
+  const nameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    api.settings.get()
+      .then(s => setLocalSettings(s))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!analysisName) {
+      setNameTaken(false)
+      return
+    }
+    if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current)
+    setCheckingName(true)
+    nameCheckTimer.current = setTimeout(async () => {
+      try {
+        const { taken } = await api.results.checkName(analysisName)
+        setNameTaken(taken)
+      } catch {
+        setNameTaken(false)
+      } finally {
+        setCheckingName(false)
+      }
+    }, 400)
+  }, [analysisName])
+
   const uploading = uploadingClimatic || uploadingGenetic
-  const canRun = !!climaticId && !!geneticId && !running && !uploading
+  const canRun = !!climaticId && !!geneticId && !running && !uploading && !nameTaken && !!analysisName
 
   const statusLabel = (status: string) => {
     const map: Record<string, string> = {
@@ -135,6 +172,8 @@ export default function UploadPage() {
     setClimaticPreview(null)
     setError(null)
     setUploadingClimatic(true)
+    const derivedName = file.name.replace(/\.[^.]+$/, '')
+    setAnalysisName(derivedName)
     try {
       const { file_id } = await api.upload.climatic(file)
       setClimaticId(file_id)
@@ -178,7 +217,8 @@ export default function UploadPage() {
       const { result_id } = await api.jobs.create({
         climatic_file_id: climaticId,
         genetic_file_id: geneticId,
-        name: climateFile?.name.replace(/\.[^.]+$/, '') ?? 'result',
+        name: analysisName || climateFile?.name.replace(/\.[^.]+$/, '') || 'result',
+        settings: localSettings,
       })
       setResultId(result_id)
 
@@ -245,6 +285,59 @@ export default function UploadPage() {
               uploading={uploadingGenetic}
               onFile={handleGeneticFile}
             />
+          </div>
+
+          {/* Analysis name */}
+          <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>
+              {t.upload_analysis_name}
+            </label>
+            <input
+              type="text"
+              value={analysisName}
+              onChange={e => setAnalysisName(e.target.value)}
+              placeholder={t.upload_analysis_name}
+              style={{ ...inputStyle, maxWidth: '360px' }}
+              onFocus={e => (e.target.style.borderColor = 'var(--secondary-hover)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--secondary)')}
+            />
+            {nameTaken && !checkingName && (
+              <span style={{ fontSize: '12px', color: 'var(--error)' }}>{t.upload_name_taken}</span>
+            )}
+          </div>
+
+          {/* Collapsible settings */}
+          <div style={{ marginTop: '20px' }}>
+            <button
+              onClick={() => setSettingsOpen(o => !o)}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '8px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--text)',
+                cursor: 'pointer',
+              }}
+            >
+              {settingsOpen ? t.upload_settings_hide : t.upload_settings_show}
+            </button>
+
+            {settingsOpen && (
+              <div style={{
+                marginTop: '16px',
+                padding: '20px',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                backgroundColor: 'var(--secondary)',
+              }}>
+                <AnalysisSettingsForm
+                  settings={localSettings}
+                  onChange={(key, value) => setLocalSettings(prev => ({ ...prev, [key]: value }))}
+                />
+              </div>
+            )}
           </div>
 
           {error && (

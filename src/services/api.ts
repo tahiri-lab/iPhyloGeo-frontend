@@ -58,6 +58,7 @@ export interface CreateJobRequest {
   genetic_tree_file_id?: string;
   climatic_params?: Record<string, unknown>;
   genetic_params?: Record<string, unknown>;
+  settings?: Partial<AnalysisSettings>;
   name?: string;
   email?: string;
   lang?: string;
@@ -76,6 +77,7 @@ export interface AnalysisResult {
   genetic_trees?: Record<string, string>;
   climatic_params?: Record<string, unknown>;
   genetic_params?: Record<string, unknown>;
+  settings?: AnalysisSettings;
 }
 
 // ── Upload ────────────────────────────────────────────────────────────────────
@@ -170,6 +172,20 @@ export const results = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, lang }),
     }),
+
+  /** Check whether a result name is already taken (cookie-scoped). */
+  checkName: (name: string) =>
+    request<{ taken: boolean }>(`/api/results/check-name?name=${encodeURIComponent(name)}`),
+
+  /** Re-run an existing analysis with new settings, reusing the same uploaded files. */
+  rerun: (id: string, settings: Partial<AnalysisSettings>, name?: string) => {
+    addStoredId(id);
+    return request<{ result_id: string }>(`/api/results/${id}/rerun`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settings, name }),
+    });
+  },
 };
 
 // ── Settings ──────────────────────────────────────────────────────────────────
