@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ComposedChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
-} from 'recharts'
+import BootstrapChart from '../../components/molecules/BootstrapChart/BootstrapChart'
 import PageContainer from '../../components/templates/PageContainer/PageContainer'
 import PageCard from '../../components/organisms/PageCard/PageCard'
 import PageSection from '../../components/organisms/PageSection/PageSection'
@@ -116,6 +113,29 @@ function parseOutput(output: OutputDict | undefined): ParsedOutput {
 
 // ── Settings config ───────────────────────────────────────────────────────────
 
+const SETTING_LABELS: Record<keyof AnalysisSettings, string> = {
+  alignment_method: 'Alignment Method',
+  distance_method: 'Distance Method',
+  fit_method: 'Fit Method',
+  tree_type: 'Tree Type',
+  statistical_test: 'Statistical Test',
+  mantel_test_method: 'Mantel Method',
+  method_similarity: 'Similarity Method',
+  bootstrap_threshold: 'Bootstrap Threshold',
+  dist_threshold: 'Distance Threshold',
+  window_size: 'Window Size',
+  step_size: 'Step Size',
+  rate_similarity: 'Similarity Rate (%)',
+  preprocessing_genetic: 'Genetic Preprocessing',
+  preprocessing_climatic: 'Climatic Preprocessing',
+  preprocessing_threshold_genetic: 'Genetic Threshold',
+  preprocessing_threshold_climatic: 'Climatic Threshold',
+  correlation_climatic_enabled: 'Climatic Correlation',
+  correlation_threshold_climatic: 'Correlation Threshold',
+  permutations_mantel_test: 'Mantel Permutations',
+  permutations_protest: 'Procrustes Permutations',
+}
+
 const SETTINGS_GROUPS: { label: string; keys: (keyof AnalysisSettings)[] }[] = [
   {
     label: 'Algorithm',
@@ -139,6 +159,65 @@ const SETTINGS_GROUPS: { label: string; keys: (keyof AnalysisSettings)[] }[] = [
   },
 ]
 
+function SettingValue({ value, differs }: { value: string; differs: boolean }) {
+  const isDisabled = value === 'Disabled'
+  const isEnabled = value === 'Enabled'
+  const isNumeric = value !== '' && !isNaN(Number(value))
+
+  if (isNumeric) {
+    return (
+      <span style={{
+        fontFamily: 'monospace',
+        fontSize: 13,
+        fontWeight: differs ? 700 : 400,
+        color: differs ? 'var(--action)' : 'var(--text)',
+        background: differs
+          ? 'color-mix(in srgb, var(--action) 12%, transparent)'
+          : 'color-mix(in srgb, var(--text) 7%, transparent)',
+        borderRadius: 4,
+        padding: '1px 7px',
+        border: differs ? '1px solid color-mix(in srgb, var(--action) 30%, transparent)' : 'none',
+      }}>
+        {value}
+      </span>
+    )
+  }
+
+  if (isEnabled || isDisabled) {
+    return (
+      <span style={{
+        fontSize: 11,
+        fontWeight: 600,
+        color: isEnabled ? '#2DD4BF' : 'var(--text-secondary)',
+        background: isEnabled
+          ? 'color-mix(in srgb, #2DD4BF 14%, transparent)'
+          : 'color-mix(in srgb, var(--text-secondary) 10%, transparent)',
+        borderRadius: 20,
+        padding: '2px 9px',
+        border: `1px solid ${isEnabled ? 'color-mix(in srgb, #2DD4BF 30%, transparent)' : 'color-mix(in srgb, var(--text-secondary) 20%, transparent)'}`,
+      }}>
+        {value}
+      </span>
+    )
+  }
+
+  return (
+    <span style={{
+      fontSize: 12,
+      fontWeight: differs ? 700 : 500,
+      color: differs ? 'var(--action)' : 'var(--text)',
+      background: differs
+        ? 'color-mix(in srgb, var(--action) 12%, transparent)'
+        : 'color-mix(in srgb, var(--text) 8%, transparent)',
+      borderRadius: 20,
+      padding: '2px 9px',
+      border: differs ? '1px solid color-mix(in srgb, var(--action) 28%, transparent)' : 'none',
+    }}>
+      {value}
+    </span>
+  )
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function SettingsDiff({
@@ -159,34 +238,38 @@ function SettingsDiff({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Column headers */}
-      <div style={wide ? { display: 'grid', gridTemplateColumns: '180px 1fr 1fr', gap: '0' } : {}}>
-        {wide && <div />}
-        {wide && (
-          <>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', paddingBottom: '4px', paddingLeft: '8px' }}>
-              {labelA}
-            </div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', paddingBottom: '4px', paddingLeft: '8px' }}>
-              {labelB}
-            </div>
-          </>
-        )}
-      </div>
+      {wide && (
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr' }}>
+          <div />
+          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingLeft: '10px' }}>
+            {labelA}
+          </div>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingLeft: '10px' }}>
+            {labelB}
+          </div>
+        </div>
+      )}
 
       {SETTINGS_GROUPS.map(group => (
         <div key={group.label}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+          <div style={{
+            fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+            paddingBottom: '8px', marginBottom: '6px',
+            borderBottom: '1px solid var(--border)',
+          }}>
             {group.label}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {group.keys.map(key => {
-              const valA = String(settingsA[key])
-              const valB = String(settingsB[key])
+            {group.keys.map((key, i) => {
+              const valA = String(settingsA[key] ?? '—')
+              const valB = String(settingsB[key] ?? '—')
               const differs = valA !== valB
-              const rowBg = differs ? 'color-mix(in srgb, var(--action) 10%, transparent)' : 'transparent'
-              const highlight = differs ? 'var(--action)' : 'var(--text)'
+              const rowBg = differs
+                ? 'color-mix(in srgb, var(--action) 6%, transparent)'
+                : i % 2 === 0 ? 'color-mix(in srgb, var(--text) 3%, transparent)' : 'transparent'
 
               if (wide) {
                 return (
@@ -194,37 +277,39 @@ function SettingsDiff({
                     key={key}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '180px 1fr 1fr',
+                      gridTemplateColumns: '200px 1fr 1fr',
                       borderRadius: '6px',
                       backgroundColor: rowBg,
-                      padding: '3px 0',
+                      padding: '5px 4px',
+                      alignItems: 'center',
                     }}
                   >
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '4px', alignSelf: 'center' }}>
-                      {key}
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '4px' }}>
+                      {SETTING_LABELS[key] ?? key}
                     </span>
-                    <span style={{ fontSize: '13px', fontWeight: differs ? 600 : 400, color: highlight, paddingLeft: '8px', alignSelf: 'center' }}>
-                      {valA}
+                    <span style={{ paddingLeft: '10px' }}>
+                      <SettingValue value={valA} differs={differs} />
                     </span>
-                    <span style={{ fontSize: '13px', fontWeight: differs ? 600 : 400, color: highlight, paddingLeft: '8px', alignSelf: 'center' }}>
-                      {valB}
+                    <span style={{ paddingLeft: '10px' }}>
+                      <SettingValue value={valB} differs={differs} />
                     </span>
                   </div>
                 )
               }
 
-              // stacked layout
               return (
-                <div key={key} style={{ borderRadius: '6px', backgroundColor: rowBg, padding: '4px 6px', marginBottom: '2px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>{key}</div>
+                <div key={key} style={{ borderRadius: '6px', backgroundColor: rowBg, padding: '6px 8px', marginBottom: '2px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                    {SETTING_LABELS[key] ?? key}
+                  </div>
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '1px' }}>{labelA}</div>
-                      <span style={{ fontSize: '13px', fontWeight: differs ? 600 : 400, color: highlight }}>{valA}</span>
+                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '2px' }}>{labelA}</div>
+                      <SettingValue value={valA} differs={differs} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '1px' }}>{labelB}</div>
-                      <span style={{ fontSize: '13px', fontWeight: differs ? 600 : 400, color: highlight }}>{valB}</span>
+                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '2px' }}>{labelB}</div>
+                      <SettingValue value={valB} differs={differs} />
                     </div>
                   </div>
                 </div>
@@ -254,39 +339,6 @@ function StatCards({ statMap }: { statMap: Record<string, CellVal> | null }) {
           </div>
         </div>
       ))}
-    </div>
-  )
-}
-
-function BootstrapChart({ chartData, distanceCol, label }: { chartData: ChartPoint[]; distanceCol: string | null; label: string }) {
-  if (!chartData.length) return <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
-  return (
-    <div>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-        {label}
-      </div>
-      <div style={{ width: '100%', height: 260 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData} margin={{ top: 8, right: 32, bottom: 24, left: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" />
-            <XAxis
-              dataKey="position"
-              label={{ value: 'Position in ASM', position: 'insideBottom', offset: -12, fill: 'var(--text-secondary)', fontSize: 11 }}
-              tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
-            />
-            <YAxis yAxisId="left" tick={{ fill: '#AD00FA', fontSize: 10 }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fill: '#00faad', fontSize: 10 }} />
-            <Tooltip
-              contentStyle={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }}
-              labelStyle={{ color: 'var(--text-secondary)' }}
-              itemStyle={{ color: 'var(--text)' }}
-            />
-            <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
-            <Line yAxisId="left" type="monotone" dataKey="bootstrapMean" name="Bootstrap mean" stroke="#AD00FA" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
-            <Line yAxisId="right" type="monotone" dataKey="distance" name={distanceCol ?? 'Distance'} stroke="#00faad" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
     </div>
   )
 }

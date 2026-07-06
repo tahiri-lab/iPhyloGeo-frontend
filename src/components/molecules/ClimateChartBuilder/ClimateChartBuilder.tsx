@@ -101,7 +101,6 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
             <XAxis {...xAxisCommon} />
             <YAxis {...yAxisCommon} />
             <Tooltip {...tooltipStyle} />
-            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
             <Bar dataKey="y" name={yCol} fill="#AD00FA" />
           </BarChart>
         )
@@ -112,7 +111,6 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
             <XAxis {...xAxisCommon} />
             <YAxis {...yAxisCommon} />
             <Tooltip {...tooltipStyle} />
-            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
             <Line type="monotone" dataKey="y" name={yCol} stroke="#AD00FA" strokeWidth={2} dot={{ r: 3 }} />
           </LineChart>
         )
@@ -136,7 +134,6 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
               label={{ value: yCol, angle: -90, position: 'insideLeft', offset: 12, fill: 'var(--text-secondary)', fontSize: 12 }}
             />
             <Tooltip cursor={{ strokeDasharray: '3 3' }} {...tooltipStyle} />
-            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
             <Scatter name={yCol} data={chartData} fill="#AD00FA" />
           </ScatterChart>
         )
@@ -148,7 +145,18 @@ export default function ClimateChartBuilder({ data }: { data: ClimaticPreview })
               {chartData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
             </Pie>
             <Tooltip contentStyle={{ background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Legend
+              content={({ payload }) => (
+                <div style={{ display: 'flex', gap: 16, justifyContent: 'center', paddingTop: 10, flexWrap: 'wrap' }}>
+                  {payload?.map(entry => (
+                    <span key={String(entry.value)} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-secondary)' }}>
+                      <span style={{ width: 10, height: 10, background: entry.color as string, display: 'inline-block', borderRadius: 2, flexShrink: 0 }} />
+                      {String(entry.value)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            />
           </PieChart>
         )
     }
