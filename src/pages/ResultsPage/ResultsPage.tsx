@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import {
-  ComposedChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
-} from 'recharts'
+import BootstrapChart from '../../components/molecules/BootstrapChart/BootstrapChart'
 import PageContainer from '../../components/templates/PageContainer/PageContainer'
 import PageCard from '../../components/organisms/PageCard/PageCard'
 import PageSection from '../../components/organisms/PageSection/PageSection'
@@ -102,20 +99,6 @@ function parseOutput(dict: OutputDict | undefined) {
   }
 
   return { mainRows, statMap, distanceCol, chartData }
-}
-
-function downloadSVG(container: HTMLDivElement | null, filename: string) {
-  const svg = container?.querySelector('svg')
-  if (!svg) return
-  const serializer = new XMLSerializer()
-  const svgStr = serializer.serializeToString(svg)
-  const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -245,14 +228,15 @@ function ActionsMenu({
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          background: 'transparent',
-          border: '1px solid var(--border)',
+          background: 'color-mix(in srgb, var(--text) 6%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--text) 20%, transparent)',
           borderRadius: '8px',
-          padding: '6px 10px',
-          fontSize: '16px',
-          color: 'var(--text-secondary)',
+          padding: '5px 10px',
+          fontSize: '18px',
+          color: 'var(--text)',
           cursor: 'pointer',
           lineHeight: 1,
+          letterSpacing: '0.05em',
         }}
         title="Actions"
       >
@@ -305,7 +289,6 @@ export default function ResultsPage() {
   useEffect(() => {
     api.settings.get().then(s => setGlobalSettings(s)).catch(() => {})
   }, [])
-  const chartRef = useRef<HTMLDivElement>(null)
   const initialIdRef = useRef(searchParams.get('id'))
   const { t } = useLang()
   const navigate = useNavigate()
@@ -544,52 +527,11 @@ export default function ResultsPage() {
         {/* ── Bootstrap/Distance chart ── */}
         {selected?.status === 'complete' && chartData.length > 0 && (
           <PageSection title={`Bootstrap Mean & ${distanceCol ?? 'Distance'}`}>
-            <div ref={chartRef} style={{ width: '100%', height: 340 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData} margin={{ top: 8, right: 48, bottom: 24, left: 16 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.15)" />
-                  <XAxis
-                    dataKey="position"
-                    label={{ value: 'Position in ASM', position: 'insideBottom', offset: -12, fill: 'var(--text-secondary)', fontSize: 12 }}
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-                  />
-                  <YAxis
-                    yAxisId="left"
-                    label={{ value: 'Bootstrap mean', angle: -90, position: 'insideLeft', offset: 12, fill: '#AD00FA', fontSize: 12 }}
-                    tick={{ fill: '#AD00FA', fontSize: 11 }}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    label={{ value: distanceCol ?? 'Distance', angle: 90, position: 'insideRight', offset: 12, fill: '#00faad', fontSize: 12 }}
-                    tick={{ fill: '#00faad', fontSize: 11 }}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                    labelStyle={{ color: 'var(--text-secondary)' }}
-                    itemStyle={{ color: 'var(--text)' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                  <Line yAxisId="left" type="monotone" dataKey="bootstrapMean" name="Bootstrap mean" stroke="#AD00FA" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                  <Line yAxisId="right" type="monotone" dataKey="distance" name={distanceCol ?? 'Distance'} stroke="#00faad" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-              <button
-                onClick={() => downloadSVG(chartRef.current, `${selected.name}-bootstrap-distance.svg`)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '6px 14px', borderRadius: 8,
-                  border: '1px solid var(--border)',
-                  background: 'transparent', color: 'var(--text-secondary)',
-                  fontSize: 12, cursor: 'pointer',
-                }}
-              >
-                {downloadIcon}
-                {t.results_download_chart}
-              </button>
-            </div>
+            <BootstrapChart
+              chartData={chartData}
+              distanceCol={distanceCol}
+              filename={`${selected.name}-bootstrap-distance.svg`}
+            />
           </PageSection>
         )}
 

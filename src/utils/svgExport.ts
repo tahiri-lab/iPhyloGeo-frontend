@@ -19,7 +19,7 @@ export function downloadSvgElement(svgEl: SVGSVGElement, filename: string, bgCol
 }
 
 export function downloadSvgFromContainer(container: HTMLDivElement | null, filename: string): void {
-  const svg = container?.querySelector('svg')
+  const svg = container?.querySelector<SVGSVGElement>('.recharts-wrapper > svg') ?? container?.querySelector('svg')
   if (!svg) return
   const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
   const clone = svg.cloneNode(true) as SVGSVGElement
