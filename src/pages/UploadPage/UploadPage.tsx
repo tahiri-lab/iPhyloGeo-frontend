@@ -127,7 +127,8 @@ export default function UploadPage() {
 
   useEffect(() => {
     api.settings.get()
-      .then(s => setLocalSettings(s))
+      // Merge: global settings as base, preserve any changes the user already made
+      .then(s => setLocalSettings(prev => ({ ...s, ...prev })))
       .catch(() => {})
   }, [])
 
