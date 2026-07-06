@@ -7,12 +7,15 @@ import PageContainer from '../../components/templates/PageContainer/PageContaine
 import PageCard from '../../components/organisms/PageCard/PageCard'
 import PageSection from '../../components/organisms/PageSection/PageSection'
 import SearchBar from '../../components/molecules/SearchBar/SearchBar'
-import PhyloTree from '../../components/atoms/PhyloTree/PhyloTree'
 import TreePagination from '../../components/molecules/Pagination/Pagination'
 import Badge from '../../components/atoms/Badge/Badge'
 import Spinner from '../../components/atoms/Spinner/Spinner'
 import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
+import { useTheme } from '../../context/ThemeContext'
+import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
+import { type LayoutType, LAYOUTS } from '../../constants/layoutConfig'
+import { selectStyle } from '../../styles/commonStyles'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -356,7 +359,10 @@ export default function ComparePage() {
   const [loadingB, setLoadingB] = useState(false)
   const [resultA, setResultA] = useState<AnalysisResult | null>(null)
   const [resultB, setResultB] = useState<AnalysisResult | null>(null)
+  const [layout, setLayout] = useState<LayoutType>('top-down')
   const { t } = useLang()
+  const { theme } = useTheme()
+  const darkMode = theme === 'dark'
 
   useEffect(() => {
     api.results.list({ limit: 200 })
@@ -451,6 +457,24 @@ export default function ComparePage() {
             </div>
           )}
 
+          {/* ── Layout selector ── */}
+          {bothComplete && (
+            <PageSection title="" style={{ borderTop: 'none', paddingTop: 0, paddingBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  {t.graph_layout}
+                </span>
+                <select
+                  style={{ ...selectStyle, minWidth: 140 }}
+                  value={layout}
+                  onChange={e => setLayout(e.target.value as LayoutType)}
+                >
+                  {LAYOUTS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                </select>
+              </div>
+            </PageSection>
+          )}
+
           {/* ── Configuration ── */}
           {bothComplete && (
             <PageSection title={t.compare_configuration}>
@@ -488,36 +512,6 @@ export default function ComparePage() {
             </PageSection>
           )}
 
-          {/* ── Climatic Trees ── */}
-          {bothComplete && resultA && resultB &&
-            (resultA.climatic_trees || resultB.climatic_trees) && (
-            <PageSection title={t.results_climatic_trees}>
-              <TwoCol
-                wide={wide}
-                left={
-                  resultA.climatic_trees && Object.keys(resultA.climatic_trees).length > 0
-                    ? <TreePagination
-                        key={`${resultA._id}-climatic`}
-                        trees={Object.entries(resultA.climatic_trees).map(([name, newick]) => ({ name, newick }))}
-                        renderTree={(name, newick) => <PhyloTree key={name} newick={newick} name={name} />}
-                        pageSize={3}
-                      />
-                    : <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
-                }
-                right={
-                  resultB.climatic_trees && Object.keys(resultB.climatic_trees).length > 0
-                    ? <TreePagination
-                        key={`${resultB._id}-climatic`}
-                        trees={Object.entries(resultB.climatic_trees).map(([name, newick]) => ({ name, newick }))}
-                        renderTree={(name, newick) => <PhyloTree key={name} newick={newick} name={name} />}
-                        pageSize={3}
-                      />
-                    : <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
-                }
-              />
-            </PageSection>
-          )}
-
           {/* ── Genetic Trees ── */}
           {bothComplete && resultA && resultB &&
             (resultA.genetic_trees || resultB.genetic_trees) && (
@@ -527,9 +521,11 @@ export default function ComparePage() {
                 left={
                   resultA.genetic_trees && Object.keys(resultA.genetic_trees).length > 0
                     ? <TreePagination
-                        key={`${resultA._id}-genetic`}
+                        key={`${resultA._id}-genetic-${layout}`}
                         trees={Object.entries(resultA.genetic_trees).map(([name, newick]) => ({ name, newick }))}
-                        renderTree={(name, newick) => <PhyloTree key={name} newick={newick} name={name} />}
+                        renderTree={(name, newick) => (
+                          <TreeGraph key={`${name}-${layout}`} newick={newick} name={name} layout={layout} darkMode={darkMode} />
+                        )}
                         pageSize={3}
                       />
                     : <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
@@ -537,9 +533,11 @@ export default function ComparePage() {
                 right={
                   resultB.genetic_trees && Object.keys(resultB.genetic_trees).length > 0
                     ? <TreePagination
-                        key={`${resultB._id}-genetic`}
+                        key={`${resultB._id}-genetic-${layout}`}
                         trees={Object.entries(resultB.genetic_trees).map(([name, newick]) => ({ name, newick }))}
-                        renderTree={(name, newick) => <PhyloTree key={name} newick={newick} name={name} />}
+                        renderTree={(name, newick) => (
+                          <TreeGraph key={`${name}-${layout}`} newick={newick} name={name} layout={layout} darkMode={darkMode} />
+                        )}
                         pageSize={3}
                       />
                     : <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
