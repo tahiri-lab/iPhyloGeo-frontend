@@ -300,6 +300,11 @@ export default function ResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
   const [rerunning, setRerunning] = useState(false)
+  const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
+
+  useEffect(() => {
+    api.settings.get().then(s => setGlobalSettings(s)).catch(() => {})
+  }, [])
   const chartRef = useRef<HTMLDivElement>(null)
   const initialIdRef = useRef(searchParams.get('id'))
   const { t } = useLang()
@@ -480,7 +485,10 @@ export default function ResultsPage() {
                     <ActionsMenu
                       onDelete={() => handleDelete(selected)}
                       onViewConfig={() => setConfigPanel({ mode: 'view', settings: selected.settings ?? {} })}
-                      onEditConfig={() => setConfigPanel({ mode: 'edit', settings: { ...(selected.settings ?? {}) } })}
+                      onEditConfig={() => setConfigPanel({
+                        mode: 'edit',
+                        settings: { ...(Object.keys(selected.settings ?? {}).length > 0 ? selected.settings! : globalSettings) },
+                      })}
                     />
                   </div>
                 </div>
@@ -492,7 +500,7 @@ export default function ResultsPage() {
         {/* ── Config panel (view or edit) ── */}
         {selected && configPanel && (
           <PageSection title={configPanel.mode === 'view' ? t.results_view_config : t.results_edit_config}>
-            {Object.keys(configPanel.settings).length === 0 ? (
+            {configPanel.mode === 'view' && Object.keys(configPanel.settings).length === 0 ? (
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
                 No configuration saved for this analysis.
               </p>
@@ -522,7 +530,7 @@ export default function ResultsPage() {
               >
                 {t.results_config_cancel}
               </button>
-              {configPanel.mode === 'edit' && Object.keys(configPanel.settings).length > 0 && (
+              {configPanel.mode === 'edit' && (
                 <Button variant="actions" onClick={handleRerun} disabled={rerunning}>
                   {rerunning ? t.results_rerunning : t.results_rerun}
                 </Button>
