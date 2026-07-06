@@ -7,12 +7,14 @@ const importUploadPage = () => import('../pages/UploadPage/UploadPage')
 const importSettingsPage = () => import('../pages/SettingsPage/SettingsPage')
 const importResultsPage = () => import('../pages/ResultsPage/ResultsPage')
 const importGraphPage = () => import('../pages/GraphPage/GraphPage')
+const importComparePage = () => import('../pages/ComparePage/ComparePage')
 
 const HomePage = lazy(importHomePage)
 const UploadPage = lazy(importUploadPage)
 const SettingsPage = lazy(importSettingsPage)
 const ResultsPage = lazy(importResultsPage)
 const GraphPage = lazy(importGraphPage)
+const ComparePage = lazy(importComparePage)
 
 export function prefetchRoute(path: string): Promise<unknown> {
   switch (path) {
@@ -26,6 +28,8 @@ export function prefetchRoute(path: string): Promise<unknown> {
       return importResultsPage()
     case '/graph':
       return importGraphPage()
+    case '/compare':
+      return importComparePage()
     default:
       return Promise.resolve()
   }
@@ -89,6 +93,16 @@ export const router = createBrowserRouter([
       <AppLayout>
         <Suspense fallback={<RouteLoader />}>
           <GraphPage />
+        </Suspense>
+      </AppLayout>
+    ),
+  },
+  {
+    path: '/compare',
+    element: (
+      <AppLayout>
+        <Suspense fallback={<RouteLoader />}>
+          <ComparePage />
         </Suspense>
       </AppLayout>
     ),
