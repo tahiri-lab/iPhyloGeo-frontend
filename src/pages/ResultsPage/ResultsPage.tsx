@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import BootstrapChart from '../../components/molecules/BootstrapChart/BootstrapChart'
 import PageContainer from '../../components/templates/PageContainer/PageContainer'
@@ -295,6 +295,19 @@ export default function ResultsPage() {
   const { t } = useLang()
   const navigate = useNavigate()
 
+  const selectResult = useCallback((r: AnalysisResult, updateUrl = true) => {
+    setEmailMsg(null)
+    setConfigPanel(null)
+    setSelected(null)
+    if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
+    setLoadingDetail(true)
+    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
+    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
+      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
+      : Promise.resolve(setSelected(r))
+    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
+  }, [setSearchParams])
+
   useEffect(() => {
     const idFromUrl = initialIdRef.current
     api.results.list({ limit: 200 })
@@ -318,20 +331,7 @@ export default function ResultsPage() {
       })
       .catch(e => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false))
-  }, [])
-
-  const selectResult = (r: AnalysisResult, updateUrl = true) => {
-    setEmailMsg(null)
-    setConfigPanel(null)
-    setSelected(null)
-    if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
-    setLoadingDetail(true)
-    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
-    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
-      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
-      : Promise.resolve(setSelected(r))
-    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
-  }
+  }, [selectResult])
 
   const handleDelete = async (r: AnalysisResult) => {
     try {
@@ -460,7 +460,7 @@ export default function ResultsPage() {
 		    label: editMatch ? editMatch[1] : r.name,
 		    hover: {
 		      text: editMatch ? editMatch[2] : "OG",
-		      content: <SettingsView settings={r.settings} label={null} otherSettings={undefined} otherLabel={null} wide={null} />,
+		      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
 		    },
 		    sublabel: new Date(r.created_at).toLocaleString(),
 		    badge: r.status,

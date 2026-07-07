@@ -7,7 +7,7 @@ import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 import TreePagination from '../../components/molecules/Pagination/Pagination'
 import Badge from '../../components/atoms/Badge/Badge'
 import Spinner from '../../components/atoms/Spinner/Spinner'
-import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
+import api, { type AnalysisResult } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
 import { useTheme } from '../../context/ThemeContext'
 import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
@@ -245,7 +245,7 @@ export default function ComparePage() {
         label: r.name,
         hover: {
           text: editMatch ? editMatch[2] : "OG",
-          content: <SettingsView settings={r.settings} />,
+          content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
         },
         sublabel: new Date(r.created_at).toLocaleString(),
         badge: r.status,
