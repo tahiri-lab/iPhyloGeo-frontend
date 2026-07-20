@@ -14,6 +14,7 @@ import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
+import { validateSettings } from '../../utils/validationParamsSettings'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -346,6 +347,13 @@ export default function ResultsPage() {
 
   const handleRerun = async () => {
     if (!selected || !configPanel) return
+    
+    const validationError = validateSettings(configPanel.settings, t)
+    if (validationError) {
+      alert(validationError)
+      return
+    }
+
     setRerunning(true)
     try {
       const { result_id } = await api.results.rerun(selected._id, configPanel.settings)
