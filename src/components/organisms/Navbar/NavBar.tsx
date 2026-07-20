@@ -162,7 +162,7 @@ export default function NavBar() {
         alignSelf: 'flex-start',
         margin: !isSmall ? '10px' : '0',
         borderRadius: '16px',
-        zIndex: 100,
+        zIndex: !minimized && isSmall ? 999 : 100,
         width: minimized ? '75px' : isSmall ? '100%' : '250px',
         backgroundColor: 'var(--primary)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
