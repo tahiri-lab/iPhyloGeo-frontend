@@ -27,7 +27,52 @@ export default function SettingsPage() {
     setMessage(null)
   }
 
+  const validateSettings = (): string | null => {
+    const rules: Array<{ condition: boolean; error: string }> = [
+      {
+        condition: settings.window_size !== undefined && settings.window_size <= 0,
+        error: t.error_window_size,
+      },
+      {
+        condition: settings.step_size !== undefined && settings.step_size <= 0,
+        error: t.error_step_size,
+      },
+      {
+        condition: settings.rate_similarity !== undefined && settings.rate_similarity < 0,
+        error: t.error_rate_similarity,
+      },
+      {
+        condition: settings.permutations_protest !== undefined && settings.permutations_protest < 0,
+        error: t.error_permutations_protest,
+      },
+      {
+        condition: settings.bootstrap_threshold !== undefined && settings.bootstrap_threshold < 0,
+        error: t.error_bootstrap_threshold,
+      },
+      {
+        condition: settings.dist_threshold !== undefined && settings.dist_threshold < 0,
+        error: t.error_dist_threshold,
+      },
+      {
+        condition:
+          settings.correlation_threshold_climatic !== undefined &&
+          (isNaN(Number(settings.correlation_threshold_climatic)) ||
+            Number(settings.correlation_threshold_climatic) < 0 ||
+            Number(settings.correlation_threshold_climatic) > 1),
+        error: t.error_correlation_threshold,
+      },
+    ]
+
+    const invalidRule = rules.find(rule => rule.condition)
+    return invalidRule ? invalidRule.error : null
+  }
+
   const handleSave = async () => {
+    const error = validateSettings()
+    if (error) {
+      setMessage({ text: error, ok: false })
+      return
+    }
     setSaving(true)
     setMessage(null)
     try {
