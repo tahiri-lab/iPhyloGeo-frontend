@@ -102,35 +102,28 @@ const BurgerIcon = () => (
 
 const LANGS: Lang[] = ['en', 'fr', 'es']
 
-function useWindowSize() {
-  const [size, setSize] = useState([0, 0]);
+const smallWidth = 800
+
+function useWindowSizeSmall() {
+  const [sizeBool, setSizeBool] = useState([window.innerWidth < smallWidth]);
   useLayoutEffect(() => {
     function updateSize() {
-    setSize([window.innerWidth, window.innerHeight]);
+    setSizeBool([window.innerWidth < smallWidth]);
     }
     window.addEventListener('resize', updateSize);
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
 }, []);
-return size;
+return sizeBool;
 }
-//1314px autocollapse 
-//1119px small screen mode?
-//839px something else happens?
+
 export default function NavBar() {
-  const [width, height] = useWindowSize();
-  const [minimized, setMinimized] = useState(false)
-  const [isForcedOpen, setIsForcedOpen] = useState(false)
-  const [isSmall, setIsSmall] = useState(width < 800)
+  const [minimized, setMinimized] = useState(window.innerWidth < 800 ? true : false)
+  const [isSmall] = useWindowSizeSmall()
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang, t } = useLang()
   const location = useLocation()
 
-  const handleResize = () => {
-    setIsSmall(window.innerWidth < 800)
-    if (window.innerWidth < 800 && !minimized && !isForcedOpen)
-      setMinimized(true)
-  }
   useEffect(() => {
     let cancelled = false
     const g = globalThis as typeof globalThis & {
@@ -158,18 +151,6 @@ export default function NavBar() {
     }
   }, [])
 
-  useEffect(() => {
-    if (isSmall)
-      if (minimized)
-        setIsForcedOpen(true)
-      else
-        setIsForcedOpen(false)
-    
-    /*window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)*/
-    return
-  }, [minimized])
-
   return (
     <nav
       style={{
@@ -179,8 +160,8 @@ export default function NavBar() {
         alignSelf: 'flex-start',
         margin: '10px',
         borderRadius: '16px',
-        zIndex: isForcedOpen && isSmall ? 999 : 100,
-        width: minimized ? '75px' : isForcedOpen && isSmall ? '100%' : '250px',
+        zIndex: !minimized && isSmall ? 999 : 100,
+        width: minimized ? '75px' : isSmall ? '100%' : '250px',
         backgroundColor: 'var(--primary)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid var(--border)',
