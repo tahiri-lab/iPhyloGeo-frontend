@@ -126,6 +126,13 @@ export interface Translations {
   settings_help_bootstrap: string
   settings_help_window: string
   settings_help_distance: string
+  settings_reset_section: string
+  settings_reset_btn: string
+  settings_reset_confirm_title: string
+  settings_reset_confirm_message: string
+  settings_reset_confirm_yes: string
+  settings_reset_confirm_no: string
+  settings_reset_success: string
   // Upload page additions
   upload_analysis_name: string
   upload_name_taken: string
@@ -200,9 +207,9 @@ const translations: Record<Lang, Translations> = {
     graph_pipeline_tab: 'App Graph',
     loading_notify_prompt: 'Get notified by email when your results are ready?',
     loading_notify_sent: "We'll email you at",
-    home_description_before: 'An interactive platform for ',
+    home_description_before: 'An interactive platform for ',
     home_phylogeographic: 'phylogeographic analysis',
-    home_description_after: ' — correlating genetic sequences with climatic and geographic data.',
+    home_description_after: ' — correlating genetic sequences with climatic and geographic data.',
     home_get_started: 'Get Started →',
     upload_title: 'Upload Data',
     upload_input_files: 'Input Files',
@@ -259,6 +266,13 @@ const translations: Record<Lang, Translations> = {
     settings_help_bootstrap: 'Minimum bootstrap support value to retain a branch. Typical values: 10–70.',
     settings_help_window: 'Sliding-window parameters for the sequence analysis. Smaller windows give finer resolution; larger steps speed up computation.',
     settings_help_distance: 'Maximum Robinson-Foulds distance to consider two trees similar.',
+    settings_reset_section: 'Reset',
+    settings_reset_btn: 'Reset to Defaults',
+    settings_reset_confirm_title: 'Reset Settings',
+    settings_reset_confirm_message: 'Are you sure you want to restore all settings to factory defaults? This action cannot be undone.',
+    settings_reset_confirm_yes: 'Reset',
+    settings_reset_confirm_no: 'Cancel',
+    settings_reset_success: 'Settings restored to defaults.',
     upload_analysis_name: 'Analysis name',
     upload_name_taken: 'A result with this name already exists',
     upload_settings_section: 'Analysis Settings',
@@ -341,7 +355,7 @@ const translations: Record<Lang, Translations> = {
     upload_genetic_preview: 'Aperçu des séquences génétiques',
     upload_how_it_works: 'Comment ça marche',
     upload_help_climate_title: 'Données climatiques',
-    upload_help_climate_text: "Importez un fichier CSV ou Excel où chaque ligne correspond à un lieu d'échantillonnage. Colonnes requises : name, latitude, longitude, et toute variable climatique (ex. température, précipitations).",
+    upload_help_climate_text: "Importez un fichier CSV ou Excel où chaque ligne correspond à un lieu d'échantillonnage. Colonnes requises : name, latitude, longitude, et toute variable climatique (par exemple température, précipitations).",
     upload_help_genetic_title: 'Séquences génétiques',
     upload_help_genetic_text: 'Importez un fichier FASTA avec des séquences alignées. Les noms des échantillons doivent correspondre à ceux du fichier climatique.',
     upload_uploading: 'Téléchargement…',
@@ -387,6 +401,13 @@ const translations: Record<Lang, Translations> = {
     settings_help_bootstrap: 'Valeur minimale de support bootstrap pour conserver une branche. Valeurs typiques : 10–70.',
     settings_help_window: "Paramètres de fenêtre glissante pour l'analyse des séquences. Des fenêtres plus petites donnent une résolution plus fine ; des pas plus grands accélèrent le calcul.",
     settings_help_distance: 'Distance maximale de Robinson-Foulds pour considérer deux arbres similaires.',
+    settings_reset_section: 'Réinitialiser',
+    settings_reset_btn: 'Réinitialiser aux valeurs par défaut',
+    settings_reset_confirm_title: 'Réinitialiser les paramètres',
+    settings_reset_confirm_message: 'Êtes-vous sûr de vouloir restaurer tous les paramètres aux valeurs par défaut ? Cette action ne peut pas être annulée.',
+    settings_reset_confirm_yes: 'Réinitialiser',
+    settings_reset_confirm_no: 'Annuler',
+    settings_reset_success: 'Paramètres restaurés aux valeurs par défaut.',
     upload_analysis_name: "Nom de l'analyse",
     upload_name_taken: 'Un résultat avec ce nom existe déjà',
     upload_settings_section: "Paramètres d'analyse",
@@ -469,7 +490,7 @@ const translations: Record<Lang, Translations> = {
     upload_genetic_preview: 'Vista previa de secuencias genéticas',
     upload_how_it_works: 'Cómo funciona',
     upload_help_climate_title: 'Datos climáticos',
-    upload_help_climate_text: 'Sube un archivo CSV o Excel donde cada fila corresponde a una ubicación de muestra. Columnas requeridas: name, latitude, longitude y cualquier variable climática (p. ej. temperatura, precipitación).',
+    upload_help_climate_text: 'Sube un archivo CSV o Excel donde cada fila corresponde a una ubicación de muestra. Columnas requeridas: name, latitude, longitude y cualquier variable climática (por ejemplo, temperatura, precipitación).',
     upload_help_genetic_title: 'Secuencias genéticas',
     upload_help_genetic_text: 'Sube un archivo FASTA con secuencias alineadas. Los nombres de las muestras deben coincidir con los del archivo climático.',
     upload_uploading: 'Cargando…',
@@ -515,6 +536,13 @@ const translations: Record<Lang, Translations> = {
     settings_help_bootstrap: 'Valor mínimo de soporte bootstrap para conservar una rama. Valores típicos: 10–70.',
     settings_help_window: 'Parámetros de ventana deslizante para el análisis de secuencias. Ventanas más pequeñas dan mayor resolución; pasos más grandes aceleran el cálculo.',
     settings_help_distance: 'Distancia máxima de Robinson-Foulds para considerar dos árboles similares.',
+    settings_reset_section: 'Restaurar',
+    settings_reset_btn: 'Restaurar valores por defecto',
+    settings_reset_confirm_title: 'Restaurar ajustes',
+    settings_reset_confirm_message: '¿Estás seguro de que quieres restaurar todos los ajustes a los valores por defecto? Esta acción no se puede deshacer.',
+    settings_reset_confirm_yes: 'Restaurar',
+    settings_reset_confirm_no: 'Cancelar',
+    settings_reset_success: 'Ajustes restaurados a los valores por defecto.',
     upload_analysis_name: 'Nombre del análisis',
     upload_name_taken: 'Ya existe un resultado con este nombre',
     upload_settings_section: 'Configuración del análisis',
