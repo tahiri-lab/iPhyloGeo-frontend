@@ -38,6 +38,14 @@ export interface Translations {
   results_output: string
   results_excel: string
   results_download_chart: string
+  results_searchFilterByNamePlaceholder: string
+  results_searchFilterByStatusComplete: string
+  results_searchFilterByStatusPending: string
+  results_searchFilterByStatusFailed: string
+  results_searchFilterByStatusAll: string
+  results_searchFilterModeName: string
+  results_searchFilterModeStatus: string
+  results_searchFilterModeDate: string
   // Climate chart builder
   chart_data_preview: string
   chart_hide: string
@@ -178,6 +186,14 @@ const translations: Record<Lang, Translations> = {
     results_output: 'Output',
     results_excel: 'Excel',
     results_download_chart: 'Download chart',
+    results_searchFilterByNamePlaceholder: "Filter by name…",
+    results_searchFilterByStatusComplete: "Complete",
+    results_searchFilterByStatusPending: "Pending",
+    results_searchFilterByStatusFailed: "Failed",
+    results_searchFilterByStatusAll: "All statuses",
+    results_searchFilterModeName: "Name",
+    results_searchFilterModeStatus: "Status",
+    results_searchFilterModeDate: "Date",
     chart_data_preview: 'Data Preview',
     chart_hide: '▲ Hide',
     chart_show: '▼ Show',
@@ -306,6 +322,14 @@ const translations: Record<Lang, Translations> = {
     results_output: 'Sortie',
     results_excel: 'Excel',
     results_download_chart: 'Télécharger le graphique',
+    results_searchFilterByNamePlaceholder: "Filtrer par nom…",
+    results_searchFilterByStatusComplete: "Complété",
+    results_searchFilterByStatusPending: "En attente",
+    results_searchFilterByStatusFailed: "Échoué",
+    results_searchFilterByStatusAll: "Tous les statuts",
+    results_searchFilterModeName: "Nom",
+    results_searchFilterModeStatus: "Statut",
+    results_searchFilterModeDate: "Date",
     chart_data_preview: 'Aperçu des données',
     chart_hide: '▲ Masquer',
     chart_show: '▼ Afficher',
@@ -434,6 +458,14 @@ const translations: Record<Lang, Translations> = {
     results_output: 'Salida',
     results_excel: 'Excel',
     results_download_chart: 'Descargar gráfico',
+    results_searchFilterByNamePlaceholder: "Filtrar por nombre…",
+    results_searchFilterByStatusComplete: "Completado",
+    results_searchFilterByStatusPending: "Pendiente",
+    results_searchFilterByStatusFailed: "Fallido",  
+    results_searchFilterByStatusAll: "Todos los estados",
+    results_searchFilterModeName: "Nombre",
+    results_searchFilterModeStatus: "Estado",
+    results_searchFilterModeDate: "Fecha",
     chart_data_preview: 'Vista previa de datos',
     chart_hide: '▲ Ocultar',
     chart_show: '▼ Mostrar',
@@ -539,7 +571,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType>({
   lang: 'en',
-  setLang: () => {},
+  setLang: () => { },
   t: translations.en,
 })
 
