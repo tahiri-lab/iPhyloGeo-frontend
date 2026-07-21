@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLang } from '../../../context/LanguageContext'
 import { HoverCard } from "radix-ui"
 import type { ReactNode } from "react";
 
