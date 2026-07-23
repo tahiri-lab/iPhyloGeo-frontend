@@ -13,6 +13,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
 import { type LayoutType, LAYOUTS } from '../../constants/layoutConfig'
 import { selectStyle } from '../../styles/commonStyles'
+import SettingsView from "../../components/organisms/SettingsView/SettingsView.tsx"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -111,216 +112,7 @@ function parseOutput(output: OutputDict | undefined): ParsedOutput {
   return { statMap, distanceCol, chartData }
 }
 
-// ── Settings config ───────────────────────────────────────────────────────────
-
-const SETTING_LABELS: Record<keyof AnalysisSettings, string> = {
-  alignment_method: 'Alignment Method',
-  distance_method: 'Distance Method',
-  fit_method: 'Fit Method',
-  tree_type: 'Tree Type',
-  statistical_test: 'Statistical Test',
-  mantel_test_method: 'Mantel Method',
-  method_similarity: 'Similarity Method',
-  bootstrap_threshold: 'Bootstrap Threshold',
-  dist_threshold: 'Distance Threshold',
-  window_size: 'Window Size',
-  step_size: 'Step Size',
-  rate_similarity: 'Similarity Rate (%)',
-  preprocessing_genetic: 'Genetic Preprocessing',
-  preprocessing_climatic: 'Climatic Preprocessing',
-  preprocessing_threshold_genetic: 'Genetic Threshold',
-  preprocessing_threshold_climatic: 'Climatic Threshold',
-  correlation_climatic_enabled: 'Climatic Correlation',
-  correlation_threshold_climatic: 'Correlation Threshold',
-  permutations_mantel_test: 'Mantel Permutations',
-  permutations_protest: 'Procrustes Permutations',
-}
-
-const SETTINGS_GROUPS: { label: string; keys: (keyof AnalysisSettings)[] }[] = [
-  {
-    label: 'Algorithm',
-    keys: ['alignment_method', 'distance_method', 'fit_method', 'tree_type', 'statistical_test', 'mantel_test_method', 'method_similarity'],
-  },
-  {
-    label: 'Thresholds',
-    keys: ['bootstrap_threshold', 'dist_threshold', 'window_size', 'step_size', 'rate_similarity'],
-  },
-  {
-    label: 'Preprocessing',
-    keys: [
-      'preprocessing_genetic', 'preprocessing_climatic',
-      'preprocessing_threshold_genetic', 'preprocessing_threshold_climatic',
-      'correlation_climatic_enabled', 'correlation_threshold_climatic',
-    ],
-  },
-  {
-    label: 'Statistical Tests',
-    keys: ['permutations_mantel_test', 'permutations_protest'],
-  },
-]
-
-function SettingValue({ value, differs }: { value: string; differs: boolean }) {
-  const isDisabled = value === 'Disabled'
-  const isEnabled = value === 'Enabled'
-  const isNumeric = value !== '' && !isNaN(Number(value))
-
-  if (isNumeric) {
-    return (
-      <span style={{
-        fontFamily: 'monospace',
-        fontSize: 13,
-        fontWeight: differs ? 700 : 400,
-        color: differs ? 'var(--action)' : 'var(--text)',
-        background: differs
-          ? 'color-mix(in srgb, var(--action) 12%, transparent)'
-          : 'color-mix(in srgb, var(--text) 7%, transparent)',
-        borderRadius: 4,
-        padding: '1px 7px',
-        border: differs ? '1px solid color-mix(in srgb, var(--action) 30%, transparent)' : 'none',
-      }}>
-        {value}
-      </span>
-    )
-  }
-
-  if (isEnabled || isDisabled) {
-    return (
-      <span style={{
-        fontSize: 11,
-        fontWeight: 600,
-        color: isEnabled ? '#2DD4BF' : 'var(--text-secondary)',
-        background: isEnabled
-          ? 'color-mix(in srgb, #2DD4BF 14%, transparent)'
-          : 'color-mix(in srgb, var(--text-secondary) 10%, transparent)',
-        borderRadius: 20,
-        padding: '2px 9px',
-        border: `1px solid ${isEnabled ? 'color-mix(in srgb, #2DD4BF 30%, transparent)' : 'color-mix(in srgb, var(--text-secondary) 20%, transparent)'}`,
-      }}>
-        {value}
-      </span>
-    )
-  }
-
-  return (
-    <span style={{
-      fontSize: 12,
-      fontWeight: differs ? 700 : 500,
-      color: differs ? 'var(--action)' : 'var(--text)',
-      background: differs
-        ? 'color-mix(in srgb, var(--action) 12%, transparent)'
-        : 'color-mix(in srgb, var(--text) 8%, transparent)',
-      borderRadius: 20,
-      padding: '2px 9px',
-      border: differs ? '1px solid color-mix(in srgb, var(--action) 28%, transparent)' : 'none',
-    }}>
-      {value}
-    </span>
-  )
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function SettingsDiff({
-  settingsA,
-  settingsB,
-  labelA,
-  labelB,
-  wide,
-}: {
-  settingsA: Partial<AnalysisSettings> | null
-  settingsB: Partial<AnalysisSettings> | null
-  labelA: string
-  labelB: string
-  wide: boolean
-}) {
-  if (!settingsA || !settingsB || Object.keys(settingsA).length === 0 || Object.keys(settingsB).length === 0) {
-    return <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>No configuration saved for these analyses.</p>
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Column headers */}
-      {wide && (
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr' }}>
-          <div />
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingLeft: '10px' }}>
-            {labelA}
-          </div>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingLeft: '10px' }}>
-            {labelB}
-          </div>
-        </div>
-      )}
-
-      {SETTINGS_GROUPS.map(group => (
-        <div key={group.label}>
-          <div style={{
-            fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)',
-            textTransform: 'uppercase', letterSpacing: '0.08em',
-            paddingBottom: '8px', marginBottom: '6px',
-            borderBottom: '1px solid var(--border)',
-          }}>
-            {group.label}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {group.keys.map((key, i) => {
-              const valA = String(settingsA[key] ?? '—')
-              const valB = String(settingsB[key] ?? '—')
-              const differs = valA !== valB
-              const rowBg = differs
-                ? 'color-mix(in srgb, var(--action) 6%, transparent)'
-                : i % 2 === 0 ? 'color-mix(in srgb, var(--text) 3%, transparent)' : 'transparent'
-
-              if (wide) {
-                return (
-                  <div
-                    key={key}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '200px 1fr 1fr',
-                      borderRadius: '6px',
-                      backgroundColor: rowBg,
-                      padding: '5px 4px',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '4px' }}>
-                      {SETTING_LABELS[key] ?? key}
-                    </span>
-                    <span style={{ paddingLeft: '10px' }}>
-                      <SettingValue value={valA} differs={differs} />
-                    </span>
-                    <span style={{ paddingLeft: '10px' }}>
-                      <SettingValue value={valB} differs={differs} />
-                    </span>
-                  </div>
-                )
-              }
-
-              return (
-                <div key={key} style={{ borderRadius: '6px', backgroundColor: rowBg, padding: '6px 8px', marginBottom: '2px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                    {SETTING_LABELS[key] ?? key}
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '2px' }}>{labelA}</div>
-                      <SettingValue value={valA} differs={differs} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '2px' }}>{labelB}</div>
-                      <SettingValue value={valB} differs={differs} />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 function StatCards({ statMap }: { statMap: Record<string, CellVal> | null }) {
   if (!statMap) return <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>—</p>
@@ -445,12 +237,20 @@ export default function ComparePage() {
   const bComplete = resultB?.status === 'complete'
   const bothComplete = aComplete && bComplete
 
-  const selectorOptions = allResults.map(r => ({
-    id: r._id,
-    label: r.name,
-    sublabel: new Date(r.created_at).toLocaleString(),
-    badge: r.status,
-  }))
+  const selectorOptions = allResults.map(r => {
+    const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)!
+    return (
+      {
+        id: r._id,
+        label: r.name,
+        hover: {
+          text: editMatch ? editMatch[2] : "OG",
+          content: <SettingsView settings={r.settings} />,
+        },
+        sublabel: new Date(r.created_at).toLocaleString(),
+        badge: r.status,
+      })
+  })
 
   const labelA = resultA?.name ?? t.compare_analysis_a
   const labelB = resultB?.name ?? t.compare_analysis_b
@@ -530,11 +330,11 @@ export default function ComparePage() {
           {/* ── Configuration ── */}
           {bothComplete && (
             <PageSection title={t.compare_configuration}>
-              <SettingsDiff
-                settingsA={resultA?.settings ?? null}
-                settingsB={resultB?.settings ?? null}
-                labelA={labelA}
-                labelB={labelB}
+              <SettingsView
+                settings={resultA?.settings ?? null}
+                otherSettings={resultB?.settings ?? null}
+                label={labelA}
+                otherLabel={labelB}
                 wide={wide}
               />
             </PageSection>

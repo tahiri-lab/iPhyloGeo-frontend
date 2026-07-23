@@ -302,7 +302,7 @@ export default function UploadPage() {
               onFocus={e => (e.target.style.borderColor = 'var(--secondary-hover)')}
               onBlur={e => (e.target.style.borderColor = 'var(--secondary)')}
             />
-            {nameTaken && !checkingName && (
+            {(nameTaken || analysisName.match(/(.*) \(edit (\d+)\)$/)) && !checkingName && (
               <span style={{ fontSize: '12px', color: 'var(--error)' }}>{t.upload_name_taken}</span>
             )}
           </div>
