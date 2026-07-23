@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
+import { HoverCard } from "radix-ui"
+import type { ReactNode } from "react";
+
+export interface SearchBarOptionHover {
+  text: string
+  content: ReactNode
+}
 import { useLang } from '../../../context/LanguageContext'
 
 export interface SearchBarOption {
   id: string
   label: string
+  hover?: SearchBarOptionHover
   sublabel?: string
   badge?: string
 }
@@ -280,8 +288,52 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                       (e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected ? 'var(--action-soft-bg)' : 'transparent'
                     }}
                   >
-                    <div style={{ overflow: 'hidden' }}>
+                    <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                       <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{opt.label}</span>
+                      {opt.hover && (
+                        <HoverCard.Root>
+                          <HoverCard.Trigger asChild>
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '20px',
+                              backgroundColor: 'var(--action)',
+                              color: 'var(--primary)',
+                              border: '1px solid var(--border)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.03em',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
+                              marginLeft: '10px',
+                            }}
+                            >
+                              {opt.hover.text}
+                            </span>
+                          </HoverCard.Trigger>
+                          <HoverCard.Portal>
+                            <HoverCard.Content
+                              side="right"
+                              sideOffset={5}
+                              style={{
+                                background: 'var(--primary)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '8px',
+                                padding: '10px',
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                                zIndex: 1000,
+
+                                maxWidth: 'min(400px, calc(100vw - 40px))',
+                                maxHeight: 'calc(80vh)',
+                                overflowY: 'auto',
+                                overflowX: 'auto',
+                              }}
+                            >
+                              {opt.hover.content}
+                            </HoverCard.Content>
+                          </HoverCard.Portal>
+                        </HoverCard.Root>
+                      )}
                       {opt.sublabel && (
                         <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '10px' }}>
                           {opt.sublabel}
@@ -302,7 +354,8 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
                         marginLeft: '10px',
-                      }}>
+                      }}
+                      >
                         {opt.badge}
                       </span>
                     )}
