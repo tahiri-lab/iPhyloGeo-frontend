@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useLang, type Lang, type Translations } from '../../../context/LanguageContext'
@@ -102,11 +102,28 @@ const BurgerIcon = () => (
 
 const LANGS: Lang[] = ['en', 'fr', 'es']
 
+const smallWidth = 800
+
+function useWindowSizeSmall() {
+  const [sizeBool, setSizeBool] = useState([window.innerWidth < smallWidth]);
+  useLayoutEffect(() => {
+    function updateSize() {
+    setSizeBool([window.innerWidth < smallWidth]);
+    }
+    window.addEventListener('resize', updateSize);
+    updateSize();
+    return () => window.removeEventListener('resize', updateSize);
+}, []);
+return sizeBool;
+}
+
 export default function NavBar() {
-  const [minimized, setMinimized] = useState(false)
+  const [minimized, setMinimized] = useState(window.innerWidth < 800 ? true : false)
+  const [isSmall] = useWindowSizeSmall()
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang, t } = useLang()
   const location = useLocation()
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -137,19 +154,20 @@ export default function NavBar() {
 
   return (
     <nav
+      onMouseLeave={() => {setMinimized(true);setOpen(false)}}
       style={{
         position: 'sticky',
-        top: '10px',
+        top: !isSmall ? '10px' : '0',
         flexShrink: 0,
         alignSelf: 'flex-start',
-        margin: '10px',
+        margin: !isSmall ? '10px' : '0',
         borderRadius: '16px',
         zIndex: 100,
-        width: minimized ? '75px' : '250px',
+        width: minimized ? '75px' : isSmall ? '100%' : '250px',
         backgroundColor: 'var(--primary)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid var(--border)',
-        height: 'calc(100vh - 21px)',
+        height: !isSmall ? 'calc(100vh - 21px)' : '100vh',
         transition: 'width 0.3s ease-in-out',
         display: 'flex',
         flexDirection: 'column',
@@ -296,9 +314,70 @@ export default function NavBar() {
         }}
       >
         {/* Language switcher */}
-        {!minimized && (
+        {(
           <div style={{ display: 'flex', gap: '4px', marginBottom: '2px' }}>
-            {LANGS.map(l => (
+            <div style={{ position: 'relative' }}>
+              {/* Trigger */}
+              <button
+                onClick={() => setOpen(o => !o)}
+                style={{
+                  width: '100%',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  border: `1px solid var(--action)`,
+                  background: 'var(--action-soft-bg)',
+                  color: 'var(--action)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                }}
+              >
+                {lang}
+              </button>
+
+              {/* Dropdown */}
+              {open && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: '110%',
+                    background: 'var(--primary)',
+                    borderRadius: '8px',
+                    border: `1px solid var(--action)`,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                    overflow: 'hidden',
+                    zIndex: 999,
+                  }}
+                >
+                  {LANGS.map(l => (
+                    <div
+                      key={l}
+                      onClick={() => {
+                        setLang(l)
+                        setOpen(false)
+                      }}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        color: 'var(--action)',
+                        background: 'var(--action-soft-bg)',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      {l}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+           {/*{LANGS.map(l => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
@@ -319,7 +398,7 @@ export default function NavBar() {
               >
                 {l}
               </button>
-            ))}
+            ))}*/}
           </div>
         )}
 
