@@ -7,7 +7,6 @@ export interface SearchBarOptionHover {
   text: string
   content: ReactNode
 }
-import { useLang } from '../../../context/LanguageContext'
 
 export interface SearchBarOption {
   id: string

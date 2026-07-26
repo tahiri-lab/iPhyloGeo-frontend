@@ -16,7 +16,6 @@ import api, { type AnalysisResult, type AnalysisSettings } from '../../services/
 import { useLang } from '../../context/LanguageContext'
 import { validateSettings } from '../../utils/validationParamsSettings'
 import SettingsView from "../../components/organisms/SettingsView/SettingsView.tsx"
-import { validateSettings } from '../../utils/validationParamsSettings'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -461,7 +460,7 @@ export default function ResultsPage() {
 		    label: editMatch ? editMatch[1] : r.name,
 		    hover: {
 		      text: editMatch ? editMatch[2] : "OG",
-		      content: <SettingsView settings={r.settings} />,
+		      content: <SettingsView settings={r.settings} label={null} otherSettings={undefined} otherLabel={null} wide={null} />,
 		    },
 		    sublabel: new Date(r.created_at).toLocaleString(),
 		    badge: r.status,
