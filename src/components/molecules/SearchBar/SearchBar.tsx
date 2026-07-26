@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import * as HoverCard from '@radix-ui/react-hover-card'
-import { useEffect, useRef, useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
-import { HoverCard } from "radix-ui"
-import type { ReactNode } from "react";
 
 export interface SearchBarOptionHover {
   text: string
