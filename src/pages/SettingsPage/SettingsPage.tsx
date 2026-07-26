@@ -7,6 +7,7 @@ import Button from '../../components/atoms/Button/Button'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import { HelpSection, HelpHeading, HelpText } from '../../components/molecules/HelpSection/HelpSection'
 import { useLang } from '../../context/LanguageContext'
+import { validateSettings } from '../../utils/validationParamsSettings'
 
 export default function SettingsPage() {
   const { t } = useLang()
@@ -28,9 +29,15 @@ export default function SettingsPage() {
     setMessage(null)
   }
 
+
   const handleSave = async () => {
-    setSaving(true)
     setMessage(null)
+    const error = validateSettings(settings, t)
+    if (error) {
+      setMessage({ text: error, ok: false })
+      return
+    }
+    setSaving(true)
     try {
       await api.settings.update(settings as AnalysisSettings)
       setMessage({ text: t.settings_saved, ok: true })

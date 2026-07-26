@@ -146,6 +146,14 @@ export interface Translations {
   results_rerun: string
   results_rerunning: string
   results_config_cancel: string
+  // Errors Settings
+  error_window_size: string
+  error_step_size: string
+  error_rate_similarity: string
+  error_permutations_protest: string
+  error_bootstrap_threshold: string
+  error_dist_threshold: string
+  error_correlation_threshold: string
   // Shared
   btn_download: string
   btn_send: string
@@ -286,6 +294,13 @@ const translations: Record<Lang, Translations> = {
     results_config_cancel: 'Cancel',
     btn_download: 'Download',
     btn_send: 'Send',
+    error_window_size: "Window size must be a positive number (> 0).",
+    error_step_size: "Step size must be a positive number (> 0).",
+    error_rate_similarity: "Rate similarity must be a non-negative number (>= 0).",
+    error_permutations_protest: "Number of permutations for PROTEST must be a non-negative number (>= 0).",
+    error_bootstrap_threshold: "Bootstrap threshold must be a non-negative number (>= 0).",
+    error_dist_threshold: "Distance threshold must be a non-negative number (>= 0).",
+    error_correlation_threshold: "Correlation threshold must be between 0 and 1.",
   },
   fr: {
     nav_home: 'Accueil',
@@ -421,6 +436,13 @@ const translations: Record<Lang, Translations> = {
     results_config_cancel: 'Annuler',
     btn_download: 'Télécharger',
     btn_send: 'Envoyer',
+    error_window_size: "La taille de la fenêtre doit être un nombre strictement positif (> 0).",
+    error_step_size: "Le pas de la fenêtre doit être un nombre strictement positif (> 0).",
+    error_rate_similarity: "Le taux de similarité doit être un nombre positif ou nul (>= 0).",
+    error_permutations_protest: "Le nombre de permutations pour PROTEST doit être un nombre positif ou nul (>= 0).",
+    error_bootstrap_threshold: "Le seuil de bootstrap doit être un nombre positif ou nul (>= 0).",
+    error_dist_threshold: "Le seuil de distance doit être un nombre positif ou nul (>= 0).",
+    error_correlation_threshold: "Le seuil de corrélation doit être compris entre 0 et 1.",
   },
   es: {
     nav_home: 'Inicio',
@@ -556,6 +578,13 @@ const translations: Record<Lang, Translations> = {
     results_config_cancel: 'Cancelar',
     btn_download: 'Descargar',
     btn_send: 'Enviar',
+    error_window_size: "El tamaño de la ventana debe ser un número positivo (> 0).",
+    error_step_size: "El tamaño del paso debe ser un número positivo (> 0).",
+    error_rate_similarity: "La tasa de similitud debe ser un número no negativo (>= 0).",
+    error_permutations_protest: "El número de permutaciones para PROTEST debe ser un número no negativo (>= 0).",
+    error_bootstrap_threshold: "El umbral de bootstrap debe ser un número no negativo (>= 0).",
+    error_dist_threshold: "El umbral de distancia debe ser un número no negativo (>= 0).",
+    error_correlation_threshold: "El umbral de correlación debe estar entre 0 y 1.",
   },
 }
 
