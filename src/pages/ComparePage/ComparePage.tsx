@@ -13,7 +13,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
 import { type LayoutType, LAYOUTS } from '../../constants/layoutConfig'
 import { selectStyle } from '../../styles/commonStyles'
-import SettingsView from "../../components/organisms/SettingsView/SettingsView.tsx"
+import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -238,7 +238,7 @@ export default function ComparePage() {
   const bothComplete = aComplete && bComplete
 
   const selectorOptions = allResults.map(r => {
-    const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)!
+    const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
     return (
       {
         id: r._id,

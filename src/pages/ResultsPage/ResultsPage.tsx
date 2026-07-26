@@ -14,8 +14,8 @@ import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
+import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 import { validateSettings } from '../../utils/validationParamsSettings'
-import SettingsView from "../../components/organisms/SettingsView/SettingsView.tsx"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -454,7 +454,7 @@ export default function ResultsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <SearchBar
                 options={results.map(r => {
-		  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)!
+		  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
 		  return {
 		    id: r._id,
 		    label: editMatch ? editMatch[1] : r.name,
