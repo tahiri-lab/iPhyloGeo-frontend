@@ -13,7 +13,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
 import { type LayoutType, LAYOUTS } from '../../constants/layoutConfig'
 import { selectStyle } from '../../styles/commonStyles'
-import SettingsView from "../../components/organisms/SettingsView/SettingsView.tsx"
+import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
