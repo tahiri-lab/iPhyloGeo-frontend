@@ -15,7 +15,15 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('iphylogeo-theme')
-    return (saved as Theme) || 'light'
+    if (saved === 'light' || saved === 'dark') {
+      return saved
+    }
+
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark'
+    }
+
+    return 'light'
   })
 
   useEffect(() => {
