@@ -238,7 +238,7 @@ export default function ComparePage() {
   const bothComplete = aComplete && bComplete
 
   const selectorOptions = allResults.map(r => {
-    const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)!
+    const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
     return (
       {
         id: r._id,
