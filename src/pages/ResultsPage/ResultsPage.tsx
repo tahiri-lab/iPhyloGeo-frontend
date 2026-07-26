@@ -14,6 +14,7 @@ import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
+import { validateSettings } from '../../utils/validationParamsSettings'
 import SettingsView from "../../components/organisms/SettingsView/SettingsView.tsx"
 import { validateSettings } from '../../utils/validationParamsSettings'
 
