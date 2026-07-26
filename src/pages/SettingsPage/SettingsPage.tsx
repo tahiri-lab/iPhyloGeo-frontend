@@ -7,12 +7,14 @@ import Button from '../../components/atoms/Button/Button'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import { HelpSection, HelpHeading, HelpText } from '../../components/molecules/HelpSection/HelpSection'
 import { useLang } from '../../context/LanguageContext'
+import { validateSettings } from '../../utils/validationParamsSettings'
 
 export default function SettingsPage() {
   const { t } = useLang()
   const [settings, setSettings] = useState<Partial<AnalysisSettings>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [resetting, setResetting] = useState(false) // Track the reset request state
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
 
   useEffect(() => {
@@ -27,9 +29,15 @@ export default function SettingsPage() {
     setMessage(null)
   }
 
+
   const handleSave = async () => {
-    setSaving(true)
     setMessage(null)
+    const error = validateSettings(settings, t)
+    if (error) {
+      setMessage({ text: error, ok: false })
+      return
+    }
+    setSaving(true)
     try {
       await api.settings.update(settings as AnalysisSettings)
       setMessage({ text: t.settings_saved, ok: true })
@@ -37,6 +45,30 @@ export default function SettingsPage() {
       setMessage({ text: `Failed to save: ${e instanceof Error ? e.message : String(e)}`, ok: false })
     } finally {
       setSaving(false)
+    }
+  }
+
+  /**
+   * Send a request to reset current settings to factory/library defaults,
+   * then refresh the local state with the returned data.
+   */
+  const handleReset = async () => {
+    // Combine title and message to fit the standard window.confirm dialog format
+    const confirmationPrompt = `${t.settings_reset_confirm_title}\n\n${t.settings_reset_confirm_message}`
+    if (!window.confirm(confirmationPrompt)) {
+      return
+    }
+
+    setResetting(true)
+    setMessage(null)
+    try {
+      const defaultSettings = await api.settings.reset()
+      setSettings(defaultSettings)
+      setMessage({ text: t.settings_reset_success, ok: true })
+    } catch (e) {
+      setMessage({ text: `Failed to reset: ${e instanceof Error ? e.message : String(e)}`, ok: false })
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -59,9 +91,16 @@ export default function SettingsPage() {
 
         <PageSection title={t.settings_save_section}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <Button variant="actions" onClick={handleSave} disabled={saving}>
+            {/* Save Button */}
+            <Button variant="actions" onClick={handleSave} disabled={saving || resetting}>
               {saving ? t.settings_saving : t.settings_save_btn}
             </Button>
+            
+            {/* Reset Button */}
+            <Button variant="actions" onClick={handleReset} disabled={saving || resetting}>
+              {t.settings_reset_btn}
+            </Button>
+
             {message && (
               <span style={{ fontSize: '13px', color: message.ok ? 'var(--text-secondary)' : 'var(--error)' }}>
                 {message.text}

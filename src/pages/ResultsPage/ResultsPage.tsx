@@ -15,6 +15,7 @@ import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsFor
 import api, { type AnalysisResult, type AnalysisSettings } from '../../services/api'
 import { useLang } from '../../context/LanguageContext'
 import SettingsView from '../../components/organisms/SettingsView/SettingsView'
+import { validateSettings } from '../../utils/validationParamsSettings'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -347,6 +348,13 @@ export default function ResultsPage() {
 
   const handleRerun = async () => {
     if (!selected || !configPanel) return
+    
+    const validationError = validateSettings(configPanel.settings, t)
+    if (validationError) {
+      alert(validationError)
+      return
+    }
+
     setRerunning(true)
     try {
       let newName = selected.name
@@ -452,7 +460,7 @@ export default function ResultsPage() {
 		    label: editMatch ? editMatch[1] : r.name,
 		    hover: {
 		      text: editMatch ? editMatch[2] : "OG",
-		      content: <SettingsView settings={r.settings} />,
+		      content: <SettingsView settings={r.settings} label={null} otherSettings={undefined} otherLabel={null} wide={null} />,
 		    },
 		    sublabel: new Date(r.created_at).toLocaleString(),
 		    badge: r.status,

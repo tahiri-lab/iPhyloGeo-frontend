@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import * as HoverCard from '@radix-ui/react-hover-card'
+import { useEffect, useRef, useState } from 'react'
+import { useLang } from '../../../context/LanguageContext'
+import { HoverCard } from "radix-ui"
+import type { ReactNode } from "react";
 
 export interface SearchBarOptionHover {
   text: string
@@ -21,6 +25,8 @@ interface SearchBarProps {
   placeholder?: string
 }
 
+type SearchMode = 'name' | 'status' | 'date'
+
 const searchIcon = (
   <svg width="14" height="14" viewBox="0 0 192.904 192.904" style={{ fill: 'var(--text-secondary)', flexShrink: 0 }} aria-hidden="true">
     <path d="m190.707 180.101-47.078-47.077c11.702-14.072 18.752-32.142 18.752-51.831C162.381 36.423 125.959 0 81.191 0 36.422 0 0 36.423 0 81.193c0 44.767 36.422 81.187 81.191 81.187 19.688 0 37.759-7.049 51.831-18.751l47.079 47.078a7.474 7.474 0 0 0 5.303 2.197 7.498 7.498 0 0 0 5.303-12.803zM15 81.193C15 44.694 44.693 15 81.191 15c36.497 0 66.189 29.694 66.189 66.193 0 36.496-29.692 66.187-66.189 66.187C44.693 147.38 15 117.689 15 81.193z" />
@@ -40,14 +46,34 @@ const chevronIcon = (open: boolean) => (
 
 export default function SearchBar({ options, value, onSelect, placeholder = 'Select a result…' }: SearchBarProps) {
   const [open, setOpen] = useState(false)
+  const [searchMode, setSearchMode] = useState<SearchMode>('name')
   const [query, setQuery] = useState('')
+  const { t } = useLang()
+
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const selected = options.find(o => o.id === value) ?? null
-  const filtered = query.trim()
-    ? options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
-    : options
+
+  // Filter options based on the selected search mode
+  const filtered = options.filter(o => {
+    if (!query.trim()) return true
+
+    if (searchMode === 'name') {
+      return o.label.toLowerCase().includes(query.toLowerCase())
+    }
+
+    if (searchMode === 'status') {
+      return o.badge?.toLowerCase() === query.toLowerCase()
+    }
+
+    if (searchMode === 'date') {
+      // Basic check to see if the sublabel or date contains the input value (YYYY-MM-DD)
+      return o.sublabel ? o.sublabel.includes(query) : false
+    }
+
+    return true
+  })
 
   useEffect(() => {
     function onOutsideClick(e: MouseEvent) {
@@ -61,8 +87,10 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
   }, [])
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 0)
-  }, [open])
+    if (open && searchMode === 'name') {
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }, [open, searchMode])
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'Escape') { setOpen(false); setQuery('') }
@@ -127,15 +155,17 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
             overflow: 'hidden',
           }}
         >
-          {/* Filter input */}
-          <div style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Filter…"
+          {/* Filter control area */}
+          <div style={{ padding: '8px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '8px' }}>
+
+            {/* Search mode selector */}
+            <select
+              value={searchMode}
+              onChange={e => {
+                setSearchMode(e.target.value as SearchMode)
+                setQuery('') // Reset query on mode change
+              }}
               style={{
-                width: '100%',
                 padding: '8px 10px',
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
@@ -143,9 +173,88 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                 color: 'var(--text)',
                 backgroundColor: 'var(--secondary)',
                 outline: 'none',
-                boxSizing: 'border-box',
+                cursor: 'pointer',
               }}
-            />
+            >
+              <option value="name">{t.results_searchFilterModeName}</option>
+              <option value="status">{t.results_searchFilterModeStatus}</option>
+              <option value="date">{t.results_searchFilterModeDate}</option>
+            </select>
+
+            {/* Conditional input based on search mode */}
+            <div style={{ flex: 1 }}>
+              {searchMode === 'name' && (
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder={t.results_searchFilterByNamePlaceholder}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    backgroundColor: 'var(--secondary)',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+
+              {searchMode === 'status' && (
+                <select
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    backgroundColor: 'var(--secondary)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <option value="">{t.results_searchFilterByStatusAll}</option>
+                  <option value="complete">{t.results_searchFilterByStatusComplete}</option>
+                  <option value="pending">{t.results_searchFilterByStatusPending}</option>
+                  <option value="failed">{t.results_searchFilterByStatusFailed}</option>
+                </select>
+              )}
+
+              {searchMode === 'date' && (
+                <input
+                  type="date"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onClick={e => {
+                    // Open native date picker when clicking anywhere in the input
+                    try {
+                      e.currentTarget.showPicker()
+                    } catch {
+                      // Fallback for older browsers
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    backgroundColor: 'var(--secondary)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+            </div>
           </div>
 
           {/* Options list */}
