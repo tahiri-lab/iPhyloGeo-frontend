@@ -446,7 +446,7 @@ export default function ResultsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <SearchBar
                 options={results.map(r => {
-		  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)!
+		  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
 		  return {
 		    id: r._id,
 		    label: editMatch ? editMatch[1] : r.name,
