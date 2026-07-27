@@ -6,6 +6,7 @@ interface PageCardProps {
   style?: React.CSSProperties
 }
 
+/** Rounded card surface every page body sits in, wrapping one or more `PageSection`s. */
 export default function PageCard({ children, className = '', style }: PageCardProps) {
   return (
     <div

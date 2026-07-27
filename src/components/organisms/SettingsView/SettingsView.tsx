@@ -105,6 +105,16 @@ function SettingValue({ value, differs }: { value: string; differs: boolean }) {
   )
 }
 
+/**
+ * Read-only, grouped display of an `AnalysisSettings` snapshot. Two modes
+ * controlled by whether `otherSettings` is non-null:
+ * - **Single** (`otherSettings: null`) — one column of values, used for the
+ *   result-picker hover preview and "view config" panel.
+ * - **Diff** (`otherSettings` provided) — two columns side-by-side with
+ *   differing values highlighted; `wide` switches between a table-like
+ *   layout (desktop) and a stacked label/value layout (narrow containers).
+ *   Used by ComparePage.
+ */
 export default function SettingsView({
   settings,
   /* diff mode */

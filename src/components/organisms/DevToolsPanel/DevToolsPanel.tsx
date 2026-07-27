@@ -12,6 +12,10 @@ type PanelTab = 'server' | 'errors' | 'graph'
 type ServerState = 'checking' | 'connected' | 'disconnected'
 
 // ── App Component Graph data ──────────────────────────────────────────────────
+// NOTE: APP_NODES/APP_EDGES below are a hand-maintained snapshot of the app's
+// providers/pages/state, not generated from the source. If you add or rename
+// state, context, or major components, this graph will silently go stale —
+// there's no lint rule or test tying it to the real code.
 
 const C = 175
 const R = 76
@@ -178,6 +182,7 @@ function buildAppElements(layout: LayoutType): cytoscape.ElementDefinition[] {
 
 // ── AppGraph sub-component ────────────────────────────────────────────────────
 
+/** Renders the static {@link APP_NODES}/{@link APP_EDGES} graph as an interactive Cytoscape diagram — a hand-drawn map, not a live introspection of the running app. */
 function AppGraphView({ layout, darkMode }: { layout: LayoutType; darkMode: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
@@ -236,6 +241,13 @@ function AppGraphView({ layout, darkMode }: { layout: LayoutType; darkMode: bool
 
 // ── DevToolsPanel ─────────────────────────────────────────────────────────────
 
+/**
+ * Dev-only floating panel (rendered in every environment via `AppLayout`,
+ * but only useful during development): server connectivity, the in-memory
+ * error log from `DevToolsContext`, and a static app-structure diagram. The
+ * "server" health check is just `api.results.list()` timed for latency —
+ * there's no dedicated `/health` or `/ping` endpoint.
+ */
 export default function DevToolsPanel() {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PanelTab>('server')

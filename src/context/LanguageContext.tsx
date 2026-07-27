@@ -632,6 +632,12 @@ const LanguageContext = createContext<LanguageContextType>({
   t: translations.en,
 })
 
+/**
+ * Provides the active language and its translation table, persisted to
+ * `localStorage` under `iphylogeo-lang`. Add a new string by adding the key to
+ * {@link Translations} and a value in all three `translations` entries below —
+ * TypeScript will error on any locale missing a key.
+ */
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     return (localStorage.getItem('iphylogeo-lang') as Lang) || 'en'
@@ -649,4 +655,5 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   )
 }
 
+/** Access the current language, setter, and translation strings (`t`). Must be used under `<LanguageProvider>`. */
 export const useLang = () => useContext(LanguageContext)

@@ -7,6 +7,13 @@ interface PageSectionProps {
   style?: React.CSSProperties
 }
 
+/**
+ * One divided block inside a `PageCard`, with an optional icon+title header.
+ * The `margin: '0 -24px'` deliberately cancels out `PageCard`'s own side
+ * padding so the section's top border spans edge-to-edge, then re-applies
+ * `padding: 24px` on itself — pass `style={{ borderTop: 'none' }}` on the
+ * first section in a card to avoid a stray top rule.
+ */
 export default function PageSection({ children, icon, title, style }: PageSectionProps) {
   return (
     <div

@@ -34,6 +34,7 @@ interface ParsedOutput {
 
 // ── Responsive hook ───────────────────────────────────────────────────────────
 
+/** True once the observed container is at least `threshold`px wide — drives the side-by-side vs. stacked layout switch (see {@link TwoCol}). */
 function useContainerWide(ref: React.RefObject<HTMLDivElement | null>, threshold = 640): boolean {
   const [wide, setWide] = useState(true)
   useEffect(() => {
@@ -53,6 +54,13 @@ function useContainerWide(ref: React.RefObject<HTMLDivElement | null>, threshold
 
 const STAT_KEYWORDS = ['Mantel_r', 'Mantel_p', 'Procrustes_M2', 'PROTEST_p']
 
+/**
+ * Extracts chart-ready bootstrap/distance points and the trailing
+ * statistical-test summary row out of a result's flat `output` table
+ * (`AnalysisResult.output`, a dict of column name → values). The pipeline
+ * appends a small header+value block of `STAT_KEYWORDS` after the main rows;
+ * this splits that off from the per-window data the chart needs.
+ */
 function parseOutput(output: OutputDict | undefined): ParsedOutput {
   const empty: ParsedOutput = { statMap: null, distanceCol: null, chartData: [] }
   if (!output) return empty
@@ -164,6 +172,7 @@ function SideHeader({ result, label, onClear }: { result: AnalysisResult | null;
 
 // ── Two-column layout ─────────────────────────────────────────────────────────
 
+/** Renders `left`/`right` side-by-side with a divider when `wide`, or stacked with a horizontal rule otherwise. */
 function TwoCol({
   wide,
   left,
@@ -193,6 +202,14 @@ function TwoCol({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+/**
+ * `/compare` — side-by-side view of two completed results: settings diff
+ * (via {@link SettingsView}), bootstrap/distance charts, statistical tests,
+ * and genetic trees. Either side lazily upgrades from the list-response
+ * result (which may lack tree/output data) to the full `results.get()`
+ * payload when first selected — re-selecting the same result later
+ * re-fetches rather than caching it.
+ */
 export default function ComparePage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const wide = useContainerWide(containerRef)

@@ -61,6 +61,7 @@ const variantStyles: Record<ButtonVariant, CSSProperties> = {
   },
 }
 
+/** Styled `<button>` with named color variants (see `ButtonVariant`); hover/disabled states are handled inline rather than via CSS classes. */
 export default function Button({
   children,
   variant = 'actions',
@@ -114,7 +115,7 @@ export default function Button({
   )
 }
 
-// ButtonPack helper
+/** Centers a row of buttons with consistent gap; a thin layout wrapper, not a button group with shared state. */
 export function ButtonPack({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
