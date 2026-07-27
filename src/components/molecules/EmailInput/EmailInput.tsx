@@ -7,10 +7,14 @@ interface EmailInputProps {
   buttonLabel?: string
 }
 
+// NOTE: duplicates the regex in utils/validation.ts's validateEmail rather
+// than importing it — kept local so this component has no dependencies, but
+// keep both in sync if the validation rule ever changes.
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
+/** Email + send button used by ResultsPage's "email me the results" section; only calls `onSend` after passing basic format validation. */
 export default function EmailInput({
   description = 'Enter your email to receive results:',
   placeholder = 'you@example.com',

@@ -7,6 +7,12 @@ interface AppLayoutProps {
   hideNav?: boolean
 }
 
+/**
+ * Top-level page shell: sidebar (`NavBar`, unless `hideNav`) + scrollable
+ * main content + the always-present `DevToolsPanel`. See the inline
+ * `CRITICAL` comments below before touching `alignItems`/`overflow` — they
+ * document constraints that break the sidebar's `position: sticky`.
+ */
 export default function AppLayout({ children, hideNav = false }: AppLayoutProps) {
   return (
     <div

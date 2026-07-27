@@ -1,3 +1,5 @@
+import type { AnalysisSettings } from "../../../services/api";
+
 const SETTING_LABELS: Record<keyof AnalysisSettings, string> = {
   alignment_method: 'Alignment Method',
   distance_method: 'Distance Method',
@@ -103,6 +105,16 @@ function SettingValue({ value, differs }: { value: string; differs: boolean }) {
   )
 }
 
+/**
+ * Read-only, grouped display of an `AnalysisSettings` snapshot. Two modes
+ * controlled by whether `otherSettings` is non-null:
+ * - **Single** (`otherSettings: null`) — one column of values, used for the
+ *   result-picker hover preview and "view config" panel.
+ * - **Diff** (`otherSettings` provided) — two columns side-by-side with
+ *   differing values highlighted; `wide` switches between a table-like
+ *   layout (desktop) and a stacked label/value layout (narrow containers).
+ *   Used by ComparePage.
+ */
 export default function SettingsView({
   settings,
   /* diff mode */
@@ -155,8 +167,8 @@ export default function SettingsView({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {group.keys.map((key, i) => {
-              const val = String(settings[key] ?? '—')
-              const otherVal = diffMode ? String(otherSettings[key] ?? '—') : null
+              const val = String(settings?.[key] ?? '—')
+              const otherVal = diffMode ? String(otherSettings?.[key] ?? '—') : '—'
               const differs = diffMode && val !== otherVal
               const rowBg = diffMode && differs
                 ? 'color-mix(in srgb, var(--action) 15%, transparent)'

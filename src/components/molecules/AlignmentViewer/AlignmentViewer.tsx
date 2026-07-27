@@ -76,6 +76,14 @@ const MAX_DISPLAY_COLS = 80
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * MSA-style viewer for a genetic file preview: per-column conservation/gap
+ * bars, a computed consensus row, and a position slider to scroll through
+ * `MAX_DISPLAY_COLS` (80) columns at a time. Note `GeneticPreview.sequences`
+ * is already truncated server-side to the first 300 characters per sequence
+ * (see API.md) — this only ever renders that truncated preview, not the
+ * full alignment used by the pipeline.
+ */
 export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'

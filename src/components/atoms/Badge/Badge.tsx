@@ -4,6 +4,7 @@ interface BadgeProps {
   children: ReactNode
 }
 
+/** Small uppercase pill, e.g. for a result's status. Color comes from `--badge-bg-color`/`--badge-text-color`, not a variant prop. */
 export default function Badge({ children }: BadgeProps) {
   return (
     <span

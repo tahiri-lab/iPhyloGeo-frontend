@@ -41,6 +41,15 @@ const chevronIcon = (open: boolean) => (
   </svg>
 )
 
+/**
+ * Custom combobox for selecting a result: a filterable dropdown that can
+ * search by name (substring), exact status match, or a `YYYY-MM-DD` date
+ * substring against `sublabel`, selected via the mode `<select>` in the
+ * dropdown header. `option.hover` (used for the settings-preview badge on
+ * Results/Compare) renders as a Radix `HoverCard` — pass `null` explicitly
+ * for its unused fields if reusing `SettingsView` there, since it has no
+ * default props.
+ */
 export default function SearchBar({ options, value, onSelect, placeholder = 'Select a result…' }: SearchBarProps) {
   const [open, setOpen] = useState(false)
   const [searchMode, setSearchMode] = useState<SearchMode>('name')

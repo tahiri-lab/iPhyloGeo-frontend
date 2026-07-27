@@ -4,6 +4,13 @@ export interface TreeNode {
   children: TreeNode[]
 }
 
+/**
+ * Recursive-descent parser for a single Newick tree string (e.g.
+ * `(A:0.1,(B:0.2,C:0.3):0.4);`) into a {@link TreeNode} tree. No external
+ * library — hand-rolled since the format needed here is simple (name +
+ * branch length + nested parens), used by both tree renderers
+ * (`PhyloTree` and `CytoscapeTree`'s `buildCytoElements`).
+ */
 export function parseNewick(s: string): TreeNode {
   const str = s.trim().replace(/;$/, '').trim()
   const ctx = { s: str, pos: 0 }

@@ -88,6 +88,13 @@ interface CoffeeLoaderProps {
   emailSent?: boolean
 }
 
+/**
+ * Full-screen modal shown while an analysis job runs (see UploadPage). Shows
+ * an animated coffee mug, the current pipeline status/progress, and an
+ * optional email capture so the caller can notify the pipeline to email the
+ * user on completion — this component itself doesn't call the API, it just
+ * reports the entered email via `onEmailSubmit`.
+ */
 export default function CoffeeLoader({
   statusLabel,
   progress,

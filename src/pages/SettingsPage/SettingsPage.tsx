@@ -9,6 +9,12 @@ import { HelpSection, HelpHeading, HelpText } from '../../components/molecules/H
 import { useLang } from '../../context/LanguageContext'
 import { validateSettings } from '../../utils/validationParamsSettings'
 
+/**
+ * `/settings` — edits the *global* pipeline settings (`GET`/`PUT /api/settings`),
+ * not per-analysis settings. Client-side validated via `validateSettings`
+ * before save. See API.md for why these apply to future jobs only, not
+ * results already created.
+ */
 export default function SettingsPage() {
   const { t } = useLang()
   const [settings, setSettings] = useState<Partial<AnalysisSettings>>({})

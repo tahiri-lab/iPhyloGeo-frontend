@@ -1,5 +1,15 @@
 import type { Translations } from '../context/LanguageContext'
 
+/**
+ * Client-side pre-check for `AnalysisSettings` before submitting to
+ * SettingsPage/UploadPage/ResultsPage's edit-config panel — returns the
+ * first matching translated error message, or `null` if nothing's wrong.
+ * This is a fast-feedback subset, not a full mirror of the backend's
+ * Pydantic field constraints (e.g. it doesn't check
+ * `permutations_mantel_test` or the preprocessing thresholds) — a value that
+ * passes here can still be rejected by the API, so callers should still
+ * surface `api.settings.update`/`jobs.create` errors to the user.
+ */
 export const validateSettings = (
   settings: Record<string, unknown> | undefined,
   t: Translations

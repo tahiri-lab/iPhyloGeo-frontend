@@ -1,3 +1,4 @@
+/** Circular loading indicator with optional caption. Relies on a global `@keyframes spin` defined in the stylesheets. */
 export default function Spinner({
   size = 36,
   color = 'var(--action)',

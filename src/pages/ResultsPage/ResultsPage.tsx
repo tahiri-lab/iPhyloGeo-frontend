@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import BootstrapChart from '../../components/molecules/BootstrapChart/BootstrapChart'
 import PageContainer from '../../components/templates/PageContainer/PageContainer'
@@ -42,6 +42,13 @@ function dictToRows(dict: OutputDict): Row[] {
 
 const STAT_KEYWORDS = ['Mantel_r', 'Mantel_p', 'Procrustes_M2', 'PROTEST_p']
 
+/**
+ * Splits a result's flat `output` table into the per-window rows shown in
+ * the data table (`mainRows`), the trailing statistical-test summary
+ * (`statMap`), and chart-ready bootstrap/distance points (`chartData`).
+ * Mirrors `parseOutput` in ComparePage.tsx (kept separate since this one also
+ * returns `mainRows` for the table — consider sharing if they drift further apart).
+ */
 function parseOutput(dict: OutputDict | undefined) {
   const empty = { mainRows: [] as Row[], statMap: null as Record<string, CellVal> | null, distanceCol: null as string | null, chartData: [] as ChartPoint[] }
   if (!dict) return empty
@@ -183,6 +190,7 @@ interface ConfigPanel {
   settings: Partial<AnalysisSettings>
 }
 
+/** "⋯" dropdown for a result row/header: view config, edit+rerun, delete. Closes on outside click. */
 function ActionsMenu({
   onDelete,
   onViewConfig,
@@ -275,6 +283,15 @@ function ActionsMenu({
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * `/results` — browse past analyses and drill into one: trees, output table,
+ * bootstrap chart, and statistical tests. Deep-links via `?id=`: on mount, if
+ * the URL's `id` isn't in the first page of `results.list()`, it's fetched
+ * individually and appended so a shared link still resolves. "Re-run" opens
+ * an editable settings panel and calls `results.rerun`, which creates a new
+ * result (auto-suffixed `(edit N)` on name collision) rather than mutating
+ * this one — see API.md.
+ */
 export default function ResultsPage() {
   const [results, setResults] = useState<AnalysisResult[]>([])
   const [selected, setSelected] = useState<AnalysisResult | null>(null)
@@ -294,6 +311,19 @@ export default function ResultsPage() {
   const initialIdRef = useRef(searchParams.get('id'))
   const { t } = useLang()
   const navigate = useNavigate()
+
+  const selectResult = useCallback((r: AnalysisResult, updateUrl = true) => {
+    setEmailMsg(null)
+    setConfigPanel(null)
+    setSelected(null)
+    if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
+    setLoadingDetail(true)
+    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
+    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
+      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
+      : Promise.resolve(setSelected(r))
+    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
+  }, [setSearchParams])
 
   useEffect(() => {
     const idFromUrl = initialIdRef.current
@@ -318,20 +348,7 @@ export default function ResultsPage() {
       })
       .catch(e => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false))
-  }, [])
-
-  const selectResult = (r: AnalysisResult, updateUrl = true) => {
-    setEmailMsg(null)
-    setConfigPanel(null)
-    setSelected(null)
-    if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
-    setLoadingDetail(true)
-    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
-    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
-      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
-      : Promise.resolve(setSelected(r))
-    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
-  }
+  }, [selectResult])
 
   const handleDelete = async (r: AnalysisResult) => {
     try {
@@ -460,7 +477,7 @@ export default function ResultsPage() {
 		    label: editMatch ? editMatch[1] : r.name,
 		    hover: {
 		      text: editMatch ? editMatch[2] : "OG",
-		      content: <SettingsView settings={r.settings} label={null} otherSettings={undefined} otherLabel={null} wide={null} />,
+		      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
 		    },
 		    sublabel: new Date(r.created_at).toLocaleString(),
 		    badge: r.status,

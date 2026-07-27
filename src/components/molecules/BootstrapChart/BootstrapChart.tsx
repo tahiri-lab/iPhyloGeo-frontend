@@ -46,6 +46,13 @@ function ChartLegend({ payload }: { payload?: Array<{ value: string; color: stri
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * Dual-axis line chart of bootstrap mean vs. distance across window
+ * position (Recharts `ComposedChart`). Passing `filename` switches on a
+ * taller layout with axis titles and an SVG export button; omit it (as
+ * ComparePage does, for its compact side-by-side view) for a smaller
+ * chart with no download affordance.
+ */
 export default function BootstrapChart({ chartData, distanceCol, label, filename }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { t } = useLang()

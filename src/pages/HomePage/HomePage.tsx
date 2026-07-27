@@ -6,6 +6,12 @@ import { useLang } from '../../context/LanguageContext'
 const importDarkVideo = () => import('../../assets/videos/indexPhylogeo.mp4')
 const importLightVideo = () => import('../../assets/videos/indexPhylogeo_light.mp4')
 
+/**
+ * Landing page (`/`) — full-bleed hero video that swaps per theme.
+ * Loads the video for the *current* theme first, then lazily preloads the
+ * other theme's video during idle time so a theme toggle doesn't stall on
+ * a fresh network fetch.
+ */
 export default function HomePage() {
   const { theme } = useTheme()
   const { t } = useLang()
