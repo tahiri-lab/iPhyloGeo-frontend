@@ -47,8 +47,8 @@ export function ServerStatusProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Hook personnalisé pour utiliser le statut du serveur.
- * Si le Provider est absent, il retourne une valeur par défaut sûre pour éviter tout plantage.
+ * Custom hook to access server status.
+ * If the Provider is missing, it returns a safe default value to prevent crashes.
  */
 export function useServerStatus() {
   const ctx = useContext(ServerStatusContext)
