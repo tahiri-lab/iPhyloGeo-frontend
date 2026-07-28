@@ -393,7 +393,7 @@ export default function ResultsPage() {
     return () => {
       isMounted = false
     }
-  }, [selectResult])
+  }, [])
 
   const handleDelete = async (r: AnalysisResult) => {
     try {
