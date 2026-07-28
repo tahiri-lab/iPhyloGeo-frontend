@@ -46,6 +46,8 @@ export interface Translations {
   results_searchFilterModeName: string
   results_searchFilterModeStatus: string
   results_searchFilterModeDate: string
+  results_created : string
+  results_expired : string
   // Climate chart builder
   chart_data_preview: string
   chart_hide: string
@@ -209,6 +211,8 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Name",
     results_searchFilterModeStatus: "Status",
     results_searchFilterModeDate: "Date",
+    results_created: "Created on",
+    results_expired: "Expires on",
     chart_data_preview: 'Data Preview',
     chart_hide: '▲ Hide',
     chart_show: '▼ Show',
@@ -359,6 +363,8 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Nom",
     results_searchFilterModeStatus: "Statut",
     results_searchFilterModeDate: "Date",
+    results_created: "Créé le",
+    results_expired: "Expire le",
     chart_data_preview: 'Aperçu des données',
     chart_hide: '▲ Masquer',
     chart_show: '▼ Afficher',
@@ -509,6 +515,8 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Nombre",
     results_searchFilterModeStatus: "Estado",
     results_searchFilterModeDate: "Fecha",
+    results_created: "Creado el",
+    results_expired: "Expira el",
     chart_data_preview: 'Vista previa de datos',
     chart_hide: '▲ Ocultar',
     chart_show: '▼ Mostrar',

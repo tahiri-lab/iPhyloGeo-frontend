@@ -176,8 +176,8 @@ const downloadIcon = (
 
 const linkIcon = (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </svg>
 )
 
@@ -306,7 +306,7 @@ export default function ResultsPage() {
   const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
 
   useEffect(() => {
-    api.settings.get().then(s => setGlobalSettings(s)).catch(() => {})
+    api.settings.get().then(s => setGlobalSettings(s)).catch(() => { })
   }, [])
   const initialIdRef = useRef(searchParams.get('id'))
   const { t } = useLang()
@@ -326,28 +326,47 @@ export default function ResultsPage() {
   }, [setSearchParams])
 
   useEffect(() => {
-    const idFromUrl = initialIdRef.current
+    let isMounted = true
+
     api.results.list({ limit: 200 })
       .then(({ data }) => {
+        if (!isMounted) return
         setResults(data)
+
+        // Read the `id` from the URL query params, but only on the first mount (so that
+        const currentParams = new URLSearchParams(window.location.search)
+        const idFromUrl = currentParams.get('id')
+
         const target = idFromUrl
           ? data.find(r => r._id === idFromUrl)
           : data.find(r => r.status === 'complete')
+
         if (target) {
           selectResult(target, !idFromUrl)
         } else if (idFromUrl) {
           setLoadingDetail(true)
           api.results.get(idFromUrl)
             .then(result => {
+              if (!isMounted) return
               setResults(prev => [...prev, result])
               selectResult(result, false)
             })
             .catch(() => setError('Result not found'))
-            .finally(() => setLoadingDetail(false))
+            .finally(() => {
+              if (isMounted) setLoadingDetail(false)
+            })
         }
       })
-      .catch(e => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false))
+      .catch(e => {
+        if (isMounted) setError(e instanceof Error ? e.message : String(e))
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [selectResult])
 
   const handleDelete = async (r: AnalysisResult) => {
@@ -365,7 +384,7 @@ export default function ResultsPage() {
 
   const handleRerun = async () => {
     if (!selected || !configPanel) return
-    
+
     const validationError = validateSettings(configPanel.settings, t)
     if (validationError) {
       alert(validationError)
@@ -376,10 +395,10 @@ export default function ResultsPage() {
     try {
       let newName = selected.name
       while (results.some(r => r.name === newName)) {
-	const editMatch = newName.match(/(.*) \(edit (\d+)\)$/)
-	newName = editMatch
-	    ? `${editMatch[1]} (edit ${Number(editMatch[2]) + 1})`
-	    : `${selected.name} (edit 1)`
+        const editMatch = newName.match(/(.*) \(edit (\d+)\)$/)
+        newName = editMatch
+          ? `${editMatch[1]} (edit ${Number(editMatch[2]) + 1})`
+          : `${selected.name} (edit 1)`
       }
       const { result_id } = await api.results.rerun(selected._id, configPanel.settings, newName)
       const newResult = await api.results.get(result_id)
@@ -471,18 +490,18 @@ export default function ResultsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <SearchBar
                 options={results.map(r => {
-		  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
-		  return {
-		    id: r._id,
-		    label: editMatch ? editMatch[1] : r.name,
-		    hover: {
-		      text: editMatch ? editMatch[2] : "OG",
-		      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
-		    },
-		    sublabel: new Date(r.created_at).toLocaleString(),
-		    badge: r.status,
+                  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
+                  return {
+                    id: r._id,
+                    label: editMatch ? editMatch[1] : r.name,
+                    hover: {
+                      text: editMatch ? editMatch[2] : "OG",
+                      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
+                    },
+                    sublabel: new Date(r.created_at).toLocaleString(),
+                    badge: r.status,
                   }
-		})}
+                })}
                 value={selected?._id ?? null}
                 onSelect={id => {
                   const r = results.find(r => r._id === id)
@@ -492,9 +511,16 @@ export default function ResultsPage() {
               {selected && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '2px' }}>
                   <Badge>{selected.status}</Badge>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    {new Date(selected.created_at).toLocaleString()}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      <strong>{t.results_created}</strong> {new Date(selected.created_at).toLocaleString()}
+                    </span>
+                    {selected.expired_at && (
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <strong>{t.results_expired}</strong> {new Date(selected.expired_at).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
                   {selected.status === 'complete' && (
                     <Button
                       variant="download"
@@ -562,7 +588,7 @@ export default function ResultsPage() {
           </PageSection>
         )}
 
-        { loadingDetail && <ResultDetailSkeleton /> }
+        {loadingDetail && <ResultDetailSkeleton />}
 
         {/* ── Bootstrap/Distance chart ── */}
         {selected?.status === 'complete' && chartData.length > 0 && (
