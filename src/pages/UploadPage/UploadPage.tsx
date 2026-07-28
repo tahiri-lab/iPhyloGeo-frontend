@@ -219,48 +219,68 @@ export default function UploadPage() {
   }
 
   const handleRun = async () => {
-    if (!climaticId || !geneticId) return
-    setRunning(true)
-    setError(null)
-    setJobStatus(null)
-    setResultId(null)
-    setEmailSent(false)
-    notifyEmailRef.current = null
-    try {
-      const { result_id } = await api.jobs.create({
-        climatic_file_id: climaticId,
-        genetic_file_id: geneticId,
-        name: analysisName || climateFile?.name.replace(/\.[^.]+$/, '') || 'result',
-        settings: localSettings,
-      })
-      setResultId(result_id)
+  if (!climaticId || !geneticId) return
+  setError(null)
+  setJobStatus(null)
+  setResultId(null)
+  setEmailSent(false)
+  notifyEmailRef.current = null
 
-      const poll = async () => {
-        try {
-          const status = await api.jobs.status(result_id)
-          setJobStatus(status)
-          if (status.status === 'complete') {
-            if (notifyEmailRef.current && result_id) {
-              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => {})
-            }
-            navigate('/results')
-          } else if (status.status === 'error') {
-            setError(status.error ?? 'Pipeline failed')
-            setRunning(false)
-          } else {
-            setTimeout(poll, 2000)
+  try {
+    const { result_id } = await api.jobs.create({
+      climatic_file_id: climaticId,
+      genetic_file_id: geneticId,
+      name: analysisName || climateFile?.name.replace(/\.[^.]+$/, '') || 'result',
+      settings: localSettings,
+    })
+    
+    setRunning(true)
+    setResultId(result_id)
+
+    let consecutiveErrors = 0
+    const MAX_RETRIES = 5
+
+    const poll = async () => {
+      try {
+        const status = await api.jobs.status(result_id)
+        consecutiveErrors = 0
+        setJobStatus(status)
+
+        if (status.status === 'complete') {
+          if (notifyEmailRef.current && result_id) {
+            api.results.email(result_id, notifyEmailRef.current, lang).catch(() => {})
           }
-        } catch (e) {
+          navigate('/results')
+        } else if (status.status === 'error') {
+          setError(status.error ?? 'Pipeline failed')
+          setRunning(false)
+        } else {
+          setTimeout(poll, 2000)
+        }
+      } catch (e) {
+        consecutiveErrors++
+        if (consecutiveErrors < MAX_RETRIES) {
+          setTimeout(poll, 2000)
+        } else {
           setError(`Status check failed: ${e instanceof Error ? e.message : String(e)}`)
           setRunning(false)
         }
       }
-      poll()
-    } catch (e) {
-      setError(`Failed to start job: ${e instanceof Error ? e.message : String(e)}`)
-      setRunning(false)
+    }
+    poll()
+
+  } catch (e: unknown) {
+    setRunning(false)
+
+    if (!navigator.onLine) {
+      setError("Impossible to start analysis")
+    } else if (e instanceof Error) {
+      setError(`Failed to start job: ${e.message}`)
+    } else {
+      setError("Failed to start job: Network error or server unreachable.")
     }
   }
+}
 
   const handleEmailSubmit = (email: string) => {
     notifyEmailRef.current = email
