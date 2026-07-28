@@ -300,29 +300,57 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null)
   const [emailMsg, setEmailMsg] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [, setSearchParams] = useSearchParams()
   const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
   const [rerunning, setRerunning] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
+  const currentSelectedIdRef = useRef<string | null>(null)
+  const { t } = useLang()
+  const navigate = useNavigate()
 
   useEffect(() => {
     api.settings.get().then(s => setGlobalSettings(s)).catch(() => { })
   }, [])
-  const initialIdRef = useRef(searchParams.get('id'))
-  const { t } = useLang()
-  const navigate = useNavigate()
-
+  
   const selectResult = useCallback((r: AnalysisResult, updateUrl = true) => {
+    const targetId = r._id
+    currentSelectedIdRef.current = targetId
+
     setEmailMsg(null)
     setConfigPanel(null)
     setSelected(null)
-    if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
+
+    if (updateUrl) {
+      setSearchParams({ id: targetId }, { replace: true })
+    }
+
+    // Si l'élément est déjà complet et chargé, on l'affiche directement sans loader
+    if (r.status !== 'complete' || r.climatic_trees || r.genetic_trees) {
+      setSelected(r)
+      setLoadingDetail(false)
+      return
+    }
+
+    // Sinon, on va chercher les détails complets sur l'API
     setLoadingDetail(true)
-    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
-    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
-      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
-      : Promise.resolve(setSelected(r))
-    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
+
+    api.results.get(targetId)
+      .then(fetchedResult => {
+        // On s'assure qu'aucune autre sélection n'a eu lieu entre-temps
+        if (currentSelectedIdRef.current === targetId) {
+          setSelected(fetchedResult)
+        }
+      })
+      .catch(() => {
+        if (currentSelectedIdRef.current === targetId) {
+          setSelected(r)
+        }
+      })
+      .finally(() => {
+        if (currentSelectedIdRef.current === targetId) {
+          setLoadingDetail(false)
+        }
+      })
   }, [setSearchParams])
 
   useEffect(() => {
@@ -333,7 +361,7 @@ export default function ResultsPage() {
         if (!isMounted) return
         setResults(data)
 
-        // Read the `id` from the URL query params, but only on the first mount (so that
+        // Read the `id` from the URL query params, but only on the first mount 
         const currentParams = new URLSearchParams(window.location.search)
         const idFromUrl = currentParams.get('id')
 
