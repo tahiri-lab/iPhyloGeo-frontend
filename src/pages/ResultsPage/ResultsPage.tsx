@@ -324,19 +324,17 @@ export default function ResultsPage() {
       setSearchParams({ id: targetId }, { replace: true })
     }
 
-    // Si l'élément est déjà complet et chargé, on l'affiche directement sans loader
+    // If the result isn't complete or has trees, we can show it immediately without fetching details
     if (r.status !== 'complete' || r.climatic_trees || r.genetic_trees) {
       setSelected(r)
       setLoadingDetail(false)
       return
     }
 
-    // Sinon, on va chercher les détails complets sur l'API
     setLoadingDetail(true)
 
     api.results.get(targetId)
       .then(fetchedResult => {
-        // On s'assure qu'aucune autre sélection n'a eu lieu entre-temps
         if (currentSelectedIdRef.current === targetId) {
           setSelected(fetchedResult)
         }
