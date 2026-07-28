@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
 import { validateEmail } from '../../../utils/validation'
+import { useServerStatus } from '../../../context/ServerStatusContext'
 
 function CoffeeMug() {
   return (
@@ -88,13 +89,7 @@ interface CoffeeLoaderProps {
   emailSent?: boolean
 }
 
-/**
- * Full-screen modal shown while an analysis job runs (see UploadPage). Shows
- * an animated coffee mug, the current pipeline status/progress, and an
- * optional email capture so the caller can notify the pipeline to email the
- * user on completion — this component itself doesn't call the API, it just
- * reports the entered email via `onEmailSubmit`.
- */
+
 export default function CoffeeLoader({
   statusLabel,
   progress,
@@ -102,6 +97,7 @@ export default function CoffeeLoader({
   emailSent = false,
 }: CoffeeLoaderProps) {
   const { t } = useLang()
+  const { isOffline } = useServerStatus()
   const [email, setEmail] = useState('')
   const [emailErr, setEmailErr] = useState('')
 
@@ -144,13 +140,32 @@ export default function CoffeeLoader({
       >
         <CoffeeMug />
 
+        {/* Warning message from global context */}
+        {isOffline && (
+          <div
+            style={{
+              width: '100%',
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid var(--error)',
+              color: 'var(--error)',
+              padding: '8px 12px',
+              borderRadius: 10,
+              fontSize: 13,
+              textAlign: 'center',
+              fontWeight: 600,
+            }}
+          >
+            {t.server_connection_lost}
+          </div>
+        )}
+
         {/* Status message */}
         <div style={{ textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
             {statusLabel ?? t.results_loading}
           </p>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
-            This may take a few minutes…
+            {t.loading_time_notice}
           </p>
         </div>
 
@@ -161,7 +176,7 @@ export default function CoffeeLoader({
           </div>
         )}
 
-        {/* Divider */}
+        {/* Divider and email form */}
         {onEmailSubmit && (
           <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 18 }}>
             {emailSent ? (

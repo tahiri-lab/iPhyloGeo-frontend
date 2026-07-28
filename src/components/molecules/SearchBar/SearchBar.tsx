@@ -229,7 +229,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                   <option value="">{t.results_searchFilterByStatusAll}</option>
                   <option value="complete">{t.results_searchFilterByStatusComplete}</option>
                   <option value="pending">{t.results_searchFilterByStatusPending}</option>
-                  <option value="failed">{t.results_searchFilterByStatusFailed}</option>
+                  <option value="error">{t.results_searchFilterByStatusFailed}</option>
                 </select>
               )}
 
