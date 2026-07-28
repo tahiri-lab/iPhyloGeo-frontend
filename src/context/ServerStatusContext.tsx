@@ -5,95 +5,103 @@ import api from '../services/api'
 type ServerState = 'checking' | 'connected' | 'disconnected'
 
 interface ServerStatusContextType {
-    serverState: ServerState
-    isOffline: boolean
-    latency: number | null
-    lastPing: Date | null
+  serverState: ServerState
+  isOffline: boolean
+  latency: number | null
+  lastPing: Date | null
 }
 
 const ServerStatusContext = createContext<ServerStatusContextType | null>(null)
 
-// Nombre d'échecs consécutifs requis avant de déclarer le serveur déconnecté
+// Threshold of consecutive failed ping attempts before marking the server as disconnected
 const MAX_FAILURES = 2
 
+/**
+ * Context Provider that monitors server connectivity and network latency
+ * by periodically pinging the backend API.
+ */
 export function ServerStatusProvider({ children }: { children: ReactNode }) {
-    const [serverState, setServerState] = useState<ServerState>('checking')
-    const [latency, setLatency] = useState<number | null>(null)
-    const [lastPing, setLastPing] = useState<Date | null>(null)
+  const [serverState, setServerState] = useState<ServerState>('checking')
+  const [latency, setLatency] = useState<number | null>(null)
+  const [lastPing, setLastPing] = useState<Date | null>(null)
 
-    // Compteur d'échecs consécutifs maintenu sans réafficher le composant
-    const failureCountRef = useRef(0)
+  // Tracks consecutive failures without triggering component re-renders
+  const failureCountRef = useRef(0)
 
-    useEffect(() => {
-        let isMounted = true
+  useEffect(() => {
+    let isMounted = true
 
-        const ping = async () => {
-            // Si le navigateur lui-même n'a pas d'accès Internet
-            if (!navigator.onLine) {
-                if (isMounted) {
-                    setServerState('disconnected')
-                    setLatency(null)
-                    setLastPing(new Date())
-                }
-                return
-            }
-
-            const t0 = Date.now()
-            try {
-                // Exécute la requête : si le serveur renvoie 4xx/5xx, une erreur est levée ici
-                await api.results.list()
-
-                if (isMounted) {
-                    failureCountRef.current = 0 // Réinitialisation des échecs en cas de succès
-                    setLatency(Date.now() - t0)
-                    setServerState('connected')
-                }
-            } catch {
-                if (isMounted) {
-                    failureCountRef.current += 1
-
-                    // Ne bascule en "disconnected" qu'après MAX_FAILURES échecs consécutifs
-                    if (failureCountRef.current >= MAX_FAILURES) {
-                        setServerState('disconnected')
-                        setLatency(null)
-                    }
-                }
-            } finally {
-                if (isMounted) {
-                    setLastPing(new Date())
-                }
-            }
+    const ping = async () => {
+      // Immediate fallback if the browser itself has no network connection
+      if (!navigator.onLine) {
+        if (isMounted) {
+          setServerState('disconnected')
+          setLatency(null)
+          setLastPing(new Date())
         }
+        return
+      }
 
-        ping()
-        const id = setInterval(ping, 5000)
+      const t0 = Date.now()
+      try {
+        // Execute API check; throws an exception on HTTP errors or network failure
+        await api.results.list()
 
-        // Écouteurs d'événements pour l'état réseau natif du navigateur
-        const handleOnline = () => ping()
-        const handleOffline = () => {
-            failureCountRef.current = MAX_FAILURES
+        if (isMounted) {
+          failureCountRef.current = 0 // Reset failure counter on successful request
+          setLatency(Date.now() - t0)
+          setServerState('connected')
+        }
+      } catch {
+        if (isMounted) {
+          failureCountRef.current += 1
+
+          // Only switch state to disconnected after reaching MAX_FAILURES
+          if (failureCountRef.current >= MAX_FAILURES) {
             setServerState('disconnected')
             setLatency(null)
+          }
         }
-
-        window.addEventListener('online', handleOnline)
-        window.addEventListener('offline', handleOffline)
-
-        return () => {
-            isMounted = false
-            clearInterval(id)
-            window.removeEventListener('online', handleOnline)
-            window.removeEventListener('offline', handleOffline)
+      } finally {
+        if (isMounted) {
+          setLastPing(new Date())
         }
-    }, [])
+      }
+    }
 
-    const isOffline = serverState === 'disconnected'
+    // Initial check on mount
+    ping()
 
-    return (
-        <ServerStatusContext.Provider value={{ serverState, isOffline, latency, lastPing }}>
-            {children}
-        </ServerStatusContext.Provider>
-    )
+    // Poll the server every 5 seconds
+    const id = setInterval(ping, 5000)
+
+    // Event listeners for browser network connectivity status
+    const handleOnline = () => ping()
+    const handleOffline = () => {
+      failureCountRef.current = MAX_FAILURES
+      setServerState('disconnected')
+      setLatency(null)
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    // Clean up timers and event listeners on unmount
+    return () => {
+      isMounted = false
+      clearInterval(id)
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  const isOffline = serverState === 'disconnected'
+
+  return (
+    <ServerStatusContext.Provider value={{ serverState, isOffline, latency, lastPing }}>
+      {children}
+    </ServerStatusContext.Provider>
+  )
 }
 
 /**
@@ -101,16 +109,16 @@ export function ServerStatusProvider({ children }: { children: ReactNode }) {
  * If the Provider is missing, it returns a safe default value to prevent crashes.
  */
 export function useServerStatus() {
-    const ctx = useContext(ServerStatusContext)
+  const ctx = useContext(ServerStatusContext)
 
-    if (!ctx) {
-        return {
-            serverState: 'connected' as ServerState,
-            isOffline: false,
-            latency: null,
-            lastPing: null,
-        }
+  if (!ctx) {
+    return {
+      serverState: 'connected' as ServerState,
+      isOffline: false,
+      latency: null,
+      lastPing: null,
     }
+  }
 
-    return ctx
+  return ctx
 }
