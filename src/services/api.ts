@@ -7,6 +7,11 @@
 
 const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
+// Configuration du timeout et des retries
+const REQUEST_TIMEOUT_MS = 10000;
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 500;
+
 // ── Local result store (Safari-safe alternative to cross-origin cookies) ──────
 
 const RESULT_IDS_KEY = "iphylogeo_result_ids";
@@ -28,8 +33,53 @@ function addStoredId(id: string): void {
 
 // ── Internal helper ───────────────────────────────────────────────────────────
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fetchWithTimeoutAndRetry(url: string, init?: RequestInit): Promise<Response> {
+  let attempt = 0;
+
+  while (true) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url, {
+        credentials: "include",
+        ...init,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      // If the response is a server error (5xx), retry with exponential backoff
+      if (res.status >= 500 && attempt < MAX_RETRIES) {
+        attempt++;
+        await delay(INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1));
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      clearTimeout(timeoutId);
+
+      // Retry on network errors or timeouts, up to MAX_RETRIES
+      if (attempt < MAX_RETRIES) {
+        attempt++;
+        await delay(INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1));
+        continue;
+      }
+
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000} seconds`, { cause: err });
+      }
+
+      throw err;
+    }
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { credentials: "include", ...init });
+  const res = await fetchWithTimeoutAndRetry(`${BASE}${path}`, init);
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error((body as { detail?: string }).detail ?? `HTTP ${res.status}`);
@@ -161,7 +211,7 @@ export const results = {
 
   /** Download result as an Excel file. Returns a Blob. */
   download: async (id: string): Promise<Blob> => {
-    const res = await fetch(`${BASE}/api/results/${id}/download`, { credentials: "include" });
+    const res = await fetchWithTimeoutAndRetry(`${BASE}/api/results/${id}/download`);
     if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
     return res.blob();
   },
@@ -225,7 +275,7 @@ export const settings = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
-    reset: () =>
+  reset: () =>
     request<AnalysisSettings>("/api/settings/reset", {
       method: "POST",
     }),
