@@ -643,20 +643,20 @@ const LanguageContext = createContext<LanguageContextType>({
  * Helper to determine the initial language based on local storage and browser locale.
  */
 function getInitialLanguage(): Lang {
-  // 1. Check local storage override first
+  //Check local storage override first
   const savedLang = localStorage.getItem('iphylogeo-lang') as Lang | null
   if (savedLang && (savedLang === 'en' || savedLang === 'fr' || savedLang === 'es')) {
     return savedLang
   }
 
-  // 2. Read browser locale (e.g., "fr-FR" -> "fr")
+  //Read browser locale (e.g., "fr-FR" -> "fr")
   const browserLang = navigator.language.split('-')[0] as Lang
 
   if (browserLang === 'en' || browserLang === 'fr' || browserLang === 'es') {
     return browserLang
   }
 
-  // 3. Default fallback
+  //Default fallback
   return 'fr'
 }
 
