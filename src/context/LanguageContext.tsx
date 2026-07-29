@@ -638,10 +638,34 @@ const LanguageContext = createContext<LanguageContextType>({
  * {@link Translations} and a value in all three `translations` entries below —
  * TypeScript will error on any locale missing a key.
  */
+
+/**
+ * Helper to determine the initial language based on local storage and browser locale.
+ */
+function getInitialLanguage(): Lang {
+  // 1. Check local storage override first
+  const savedLang = localStorage.getItem('iphylogeo-lang') as Lang | null
+  if (savedLang && (savedLang === 'en' || savedLang === 'fr' || savedLang === 'es')) {
+    return savedLang
+  }
+
+  // 2. Read browser locale (e.g., "fr-FR" -> "fr")
+  const browserLang = navigator.language.split('-')[0] as Lang
+
+  if (browserLang === 'en' || browserLang === 'fr' || browserLang === 'es') {
+    return browserLang
+  }
+
+  // 3. Default fallback
+  return 'fr'
+}
+
+/**
+ * Provides the active language and its translation table, persisted to
+ * `localStorage` under `iphylogeo-lang`. Auto-detects browser language on first visit.
+ */
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    return (localStorage.getItem('iphylogeo-lang') as Lang) || 'en'
-  })
+  const [lang, setLangState] = useState<Lang>(getInitialLanguage)
 
   const setLang = (l: Lang) => {
     setLangState(l)
