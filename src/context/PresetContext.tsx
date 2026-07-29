@@ -1,13 +1,20 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { type AnalysisSettings } from '../services/api'
 
+/**
+ * Represents a saved parameter preset.
+ */
 export interface ParameterPreset {
   name: string
   settings: Partial<AnalysisSettings>
 }
 
+// Local storage key used to persist presets across sessions
 const PRESETS_STORAGE_KEY = 'iphylogeo-presets'
 
+/**
+ * Type definition for the Presets Context.
+ */
 interface PresetsContextType {
   presets: ParameterPreset[]
   selectedPresetName: string
@@ -20,14 +27,18 @@ interface PresetsContextType {
   clearSelection: () => void
 }
 
+// Create the context for managing parameter presets
 const PresetsContext = createContext<PresetsContextType | undefined>(undefined)
 
+/**
+ * Provider component that manages the state and actions for analysis presets.
+ */
 export function PresetsProvider({ children }: { children: ReactNode }) {
   const [presets, setPresets] = useState<ParameterPreset[]>([])
   const [selectedPresetName, setSelectedPresetName] = useState<string>('')
   const [newPresetName, setNewPresetName] = useState<string>('')
 
-  // Chargement initial depuis le localStorage
+  // Load saved presets from localStorage upon initial mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(PRESETS_STORAGE_KEY)
@@ -35,15 +46,21 @@ export function PresetsProvider({ children }: { children: ReactNode }) {
         setPresets(JSON.parse(stored))
       }
     } catch {
-      // Gestion silencieuse des erreurs de lecture
+      // Silently ignore JSON parsing or storage access errors
     }
   }, [])
 
+  /**
+   * Helper function to update state and sync presets with localStorage.
+   */
   const savePresetsToStorage = (updated: ParameterPreset[]) => {
     setPresets(updated)
     localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(updated))
   }
 
+  /**
+   * Saves or updates a preset using the current settings and `newPresetName`.
+   */
   const savePreset = (currentSettings: Partial<AnalysisSettings>) => {
     const trimmed = newPresetName.trim()
     if (!trimmed) return
@@ -51,6 +68,7 @@ export function PresetsProvider({ children }: { children: ReactNode }) {
     const existingIndex = presets.findIndex(p => p.name === trimmed)
     let updated: ParameterPreset[]
 
+    // Overwrite existing preset if found, otherwise add as new
     if (existingIndex >= 0) {
       updated = [...presets]
       updated[existingIndex] = { name: trimmed, settings: currentSettings }
@@ -63,6 +81,9 @@ export function PresetsProvider({ children }: { children: ReactNode }) {
     setNewPresetName('')
   }
 
+  /**
+   * Selects a preset by name and applies its settings via the provided callback.
+   */
   const selectPreset = (
     presetName: string,
     onApplySettings: (settings: Partial<AnalysisSettings>) => void
@@ -79,6 +100,9 @@ export function PresetsProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /**
+   * Deletes the currently selected preset and removes it from storage.
+   */
   const deletePreset = () => {
     if (!selectedPresetName) return
     const updated = presets.filter(p => p.name !== selectedPresetName)
@@ -86,6 +110,9 @@ export function PresetsProvider({ children }: { children: ReactNode }) {
     setSelectedPresetName('')
   }
 
+  /**
+   * Resets selection and input fields.
+   */
   const clearSelection = () => {
     setSelectedPresetName('')
     setNewPresetName('')
@@ -110,6 +137,9 @@ export function PresetsProvider({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * Custom hook to access the PresetsContext state and actions.
+ */
 export function usePresets() {
   const context = useContext(PresetsContext)
   if (!context) {
