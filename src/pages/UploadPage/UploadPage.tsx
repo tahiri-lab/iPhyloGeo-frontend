@@ -419,19 +419,12 @@ export default function UploadPage() {
                     display: 'flex',
                     flexWrap: 'wrap',
                     alignItems: 'center',
-                    gap: '12px',
+                    justifyContent: 'space-between',
+                    gap: '16px',
                     paddingBottom: '16px',
                     borderBottom: '1px solid var(--border)'
                   }}>
-                    {/* Presets Control Toolbar */}
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      alignItems: 'center',
-                      gap: '12px',
-                      paddingBottom: '16px',
-                      borderBottom: '1px solid var(--border)'
-                    }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                       {/* Preset selector */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <select
@@ -439,7 +432,7 @@ export default function UploadPage() {
                           onChange={e => handleSelectPreset(e.target.value)}
                           style={{ ...inputStyle, minWidth: '180px' }}
                         >
-                          <option value="">-- Presets --</option>
+                          <option value="">-- {t.preset_select} --</option>
                           {presets.map(p => (
                             <option key={p.name} value={p.name}>
                               {p.name}
@@ -452,16 +445,18 @@ export default function UploadPage() {
                             variant="actions"
                             onClick={handleDeletePreset}
                           >
-                            Delete
+                            {t.results_delete}
                           </Button>
                         )}
                       </div>
+
+                      <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
 
                       {/* Save preset input */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <input
                           type="text"
-                          placeholder="Preset name"
+                          placeholder={t.preset_name}
                           value={newPresetName}
                           onChange={e => setNewPresetName(e.target.value)}
                           style={{ ...inputStyle, width: '180px' }}
@@ -471,18 +466,18 @@ export default function UploadPage() {
                           disabled={!newPresetName.trim()}
                           onClick={handleSavePreset}
                         >
-                          Save
+                          {t.settings_save_section}
                         </Button>
                       </div>
-
-                      {/* Reset settings to defaults button */}
-                      <Button
-                        variant="actions"
-                        onClick={handleResetSettings}
-                      >
-                        Reset
-                      </Button>
                     </div>
+
+                    {/* Reset settings to defaults button */}
+                    <Button
+                      variant="actions"
+                      onClick={handleResetSettings}
+                    >
+                      {t.settings_reset_section}
+                    </Button>
                   </div>
 
                   <AnalysisSettingsForm

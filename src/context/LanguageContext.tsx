@@ -162,6 +162,9 @@ export interface Translations {
   error_bootstrap_threshold: string
   error_dist_threshold: string
   error_correlation_threshold: string
+  //Preset
+  preset_select: string
+  preset_name: string
   // Shared
   btn_download: string
   btn_send: string
@@ -317,6 +320,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Bootstrap threshold must be a non-negative number (>= 0).",
     error_dist_threshold: "Distance threshold must be a non-negative number (>= 0).",
     error_correlation_threshold: "Correlation threshold must be between 0 and 1.",
+    preset_select: 'Select Preset',
+    preset_name: 'Preset name',
   },
   fr: {
     nav_home: 'Accueil',
@@ -467,6 +472,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Le seuil de bootstrap doit être un nombre positif ou nul (>= 0).",
     error_dist_threshold: "Le seuil de distance doit être un nombre positif ou nul (>= 0).",
     error_correlation_threshold: "Le seuil de corrélation doit être compris entre 0 et 1.",
+    preset_select: 'Choisir un préréglage',
+    preset_name: 'Nom du préréglage',
   },
   es: {
     nav_home: 'Inicio',
@@ -504,7 +511,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filtrar por nombre…",
     results_searchFilterByStatusComplete: "Completado",
     results_searchFilterByStatusPending: "Pendiente",
-    results_searchFilterByStatusFailed: "Fallido",  
+    results_searchFilterByStatusFailed: "Fallido",
     results_searchFilterByStatusAll: "Todos los estados",
     results_searchFilterModeName: "Nombre",
     results_searchFilterModeStatus: "Estado",
@@ -617,6 +624,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "El umbral de bootstrap debe ser un número no negativo (>= 0).",
     error_dist_threshold: "El umbral de distancia debe ser un número no negativo (>= 0).",
     error_correlation_threshold: "El umbral de correlación debe estar entre 0 y 1.",
+    preset_select: 'Seleccionar preajuste',
+    preset_name: 'Nombre del preajuste',
   },
 }
 
