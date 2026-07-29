@@ -16,6 +16,8 @@ import api, { type AnalysisResult, type AnalysisSettings } from '../../services/
 import { useLang } from '../../context/LanguageContext'
 import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 import { validateSettings } from '../../utils/validationParamsSettings'
+import { usePresets } from '../../context/PresetContext'
+import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,8 +178,8 @@ const downloadIcon = (
 
 const linkIcon = (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </svg>
 )
 
@@ -304,9 +306,10 @@ export default function ResultsPage() {
   const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
   const [rerunning, setRerunning] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
+  const { clearSelection } = usePresets()
 
   useEffect(() => {
-    api.settings.get().then(s => setGlobalSettings(s)).catch(() => {})
+    api.settings.get().then(s => setGlobalSettings(s)).catch(() => { })
   }, [])
   const initialIdRef = useRef(searchParams.get('id'))
   const { t } = useLang()
@@ -365,7 +368,7 @@ export default function ResultsPage() {
 
   const handleRerun = async () => {
     if (!selected || !configPanel) return
-    
+
     const validationError = validateSettings(configPanel.settings, t)
     if (validationError) {
       alert(validationError)
@@ -376,10 +379,10 @@ export default function ResultsPage() {
     try {
       let newName = selected.name
       while (results.some(r => r.name === newName)) {
-	const editMatch = newName.match(/(.*) \(edit (\d+)\)$/)
-	newName = editMatch
-	    ? `${editMatch[1]} (edit ${Number(editMatch[2]) + 1})`
-	    : `${selected.name} (edit 1)`
+        const editMatch = newName.match(/(.*) \(edit (\d+)\)$/)
+        newName = editMatch
+          ? `${editMatch[1]} (edit ${Number(editMatch[2]) + 1})`
+          : `${selected.name} (edit 1)`
       }
       const { result_id } = await api.results.rerun(selected._id, configPanel.settings, newName)
       const newResult = await api.results.get(result_id)
@@ -471,18 +474,18 @@ export default function ResultsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <SearchBar
                 options={results.map(r => {
-		  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
-		  return {
-		    id: r._id,
-		    label: editMatch ? editMatch[1] : r.name,
-		    hover: {
-		      text: editMatch ? editMatch[2] : "OG",
-		      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
-		    },
-		    sublabel: new Date(r.created_at).toLocaleString(),
-		    badge: r.status,
+                  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
+                  return {
+                    id: r._id,
+                    label: editMatch ? editMatch[1] : r.name,
+                    hover: {
+                      text: editMatch ? editMatch[2] : "OG",
+                      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
+                    },
+                    sublabel: new Date(r.created_at).toLocaleString(),
+                    badge: r.status,
                   }
-		})}
+                })}
                 value={selected?._id ?? null}
                 onSelect={id => {
                   const r = results.find(r => r._id === id)
@@ -528,15 +531,33 @@ export default function ResultsPage() {
                 No configuration saved for this analysis.
               </p>
             ) : (
-              <AnalysisSettingsForm
-                settings={configPanel.settings}
-                onChange={(key, value) => {
-                  if (configPanel.mode === 'edit') {
-                    setConfigPanel(prev => prev ? { ...prev, settings: { ...prev.settings, [key]: value } } : null)
-                  }
-                }}
-                readOnly={configPanel.mode === 'view'}
-              />
+              <>
+                {/* PresetBar */}
+                {configPanel.mode === 'edit' && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <PresetsToolbar
+                      currentSettings={configPanel.settings}
+                      onApplySettings={(newSettings: Partial<AnalysisSettings>) => {
+                        setConfigPanel(prev => prev ? { ...prev, settings: newSettings } : null)
+                      }}
+                      onResetToDefault={() => {
+                        setConfigPanel(prev => prev ? { ...prev, settings: globalSettings } : null)
+                        clearSelection()
+                      }}
+                    />
+                  </div>
+                )}
+
+                <AnalysisSettingsForm
+                  settings={configPanel.settings}
+                  onChange={(key, value) => {
+                    if (configPanel.mode === 'edit') {
+                      setConfigPanel(prev => prev ? { ...prev, settings: { ...prev.settings, [key]: value } } : null)
+                    }
+                  }}
+                  readOnly={configPanel.mode === 'view'}
+                />
+              </>
             )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'flex-end' }}>
               <button
@@ -562,7 +583,7 @@ export default function ResultsPage() {
           </PageSection>
         )}
 
-        { loadingDetail && <ResultDetailSkeleton /> }
+        {loadingDetail && <ResultDetailSkeleton />}
 
         {/* ── Bootstrap/Distance chart ── */}
         {selected?.status === 'complete' && chartData.length > 0 && (

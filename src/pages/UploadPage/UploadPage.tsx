@@ -12,19 +12,14 @@ import ClimateChartBuilder from '../../components/molecules/ClimateChartBuilder/
 import AlignmentViewer from '../../components/molecules/AlignmentViewer/AlignmentViewer'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import { inputStyle } from '../../components/atoms/PageGrid/PageGrid'
+import { usePresets } from '../../context/PresetContext'
+import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
 
 interface UploadedFile {
   name: string
   size: number
   file: File
 }
-
-interface ParameterPreset {
-  name: string
-  settings: Partial<AnalysisSettings>
-}
-
-const PRESETS_STORAGE_KEY = 'iphylogeo-presets'
 
 /** Drag-and-drop / click-to-browse zone for a single file; shows uploading/uploaded/empty states. */
 function FileDropZone({
@@ -127,9 +122,7 @@ export default function UploadPage() {
   // Settings & Presets
   const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [presets, setPresets] = useState<ParameterPreset[]>([])
-  const [selectedPresetName, setSelectedPresetName] = useState<string>('')
-  const [newPresetName, setNewPresetName] = useState<string>('')
+  const { clearSelection } = usePresets()
 
   // Analysis name + duplicate check
   const [analysisName, setAnalysisName] = useState('')
@@ -146,20 +139,11 @@ export default function UploadPage() {
         setLocalSettings(prev => ({ ...s, ...prev }))
       })
       .catch(() => { })
-
-    try {
-      const stored = localStorage.getItem(PRESETS_STORAGE_KEY)
-      if (stored) {
-        setPresets(JSON.parse(stored))
-      }
-    } catch {
-      // ignore
-    }
   }, [])
 
   const handleResetSettings = () => {
     setLocalSettings(defaultSettings)
-    setSelectedPresetName('')
+    clearSelection()
   }
 
   useEffect(() => {
@@ -181,54 +165,7 @@ export default function UploadPage() {
     }, 400)
   }, [analysisName])
 
-  // Presets operations
-  const savePresetsToStorage = (updated: ParameterPreset[]) => {
-    setPresets(updated)
-    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(updated))
-  }
 
-  const handleSavePreset = () => {
-    const trimmed = newPresetName.trim()
-    if (!trimmed) return
-
-    const existingIndex = presets.findIndex(p => p.name === trimmed)
-    let updated: ParameterPreset[]
-
-    if (existingIndex >= 0) {
-      updated = [...presets]
-      updated[existingIndex] = { name: trimmed, settings: localSettings }
-    } else {
-      updated = [...presets, { name: trimmed, settings: localSettings }]
-    }
-
-    savePresetsToStorage(updated)
-    setSelectedPresetName(trimmed)
-    setNewPresetName('')
-  }
-
-  // Handle selecting a preset from the dropdown
-  const handleSelectPreset = (presetName: string) => {
-    setSelectedPresetName(presetName)
-
-    // If the user selects the default option (-- Presets --), reset to default settings
-    if (!presetName) {
-      setLocalSettings(defaultSettings)
-      return
-    }
-
-    // Otherwise, load the selected preset settings
-    const target = presets.find(p => p.name === presetName)
-    if (target) {
-      setLocalSettings(target.settings)
-    }
-  }
-
-  const handleDeletePreset = () => {
-    if (!selectedPresetName) return
-    const updated = presets.filter(p => p.name !== selectedPresetName)
-    savePresetsToStorage(updated)
-    setSelectedPresetName('')
-  }
 
   const uploading = uploadingClimatic || uploadingGenetic
   const canRun = !!climaticId && !!geneticId && !running && !uploading && !nameTaken && !!analysisName
@@ -425,66 +362,20 @@ export default function UploadPage() {
                     borderBottom: '1px solid var(--border)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                      {/* Preset selector */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <select
-                          value={selectedPresetName}
-                          onChange={e => handleSelectPreset(e.target.value)}
-                          style={{ ...inputStyle, minWidth: '180px' }}
-                        >
-                          <option value="">-- {t.preset_select} --</option>
-                          {presets.map(p => (
-                            <option key={p.name} value={p.name}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-
-                        {selectedPresetName && (
-                          <Button
-                            variant="actions"
-                            onClick={handleDeletePreset}
-                          >
-                            {t.results_delete}
-                          </Button>
-                        )}
-                      </div>
-
-                      <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
-
-                      {/* Save preset input */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <input
-                          type="text"
-                          placeholder={t.preset_name}
-                          value={newPresetName}
-                          onChange={e => setNewPresetName(e.target.value)}
-                          style={{ ...inputStyle, width: '180px' }}
-                        />
-                        <Button
-                          variant="actions"
-                          disabled={!newPresetName.trim()}
-                          onClick={handleSavePreset}
-                        >
-                          {t.settings_save_section}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Reset settings to defaults button */}
-                    <Button
-                      variant="actions"
-                      onClick={handleResetSettings}
-                    >
-                      {t.settings_reset_section}
-                    </Button>
+                      <PresetsToolbar
+                        currentSettings={localSettings}
+                        onApplySettings={settings => setLocalSettings(settings)}
+                        onResetToDefault={handleResetSettings}
+                      />
+                    <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
                   </div>
-
+                </div>
+                
                   <AnalysisSettingsForm
                     settings={localSettings}
                     onChange={(key, value) => setLocalSettings(prev => ({ ...prev, [key]: value }))}
                   />
-                </div>
+              </div>
               )}
             </div>
 
