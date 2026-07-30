@@ -34,8 +34,7 @@ const searchIcon = (
 )
 
 const shortcuts = Array.from({ length: 10 }, (_, i) => String(i))
-  .concat(Array.from({length: 26}, (_, i) => 'a' + i));
-
+  .concat(Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)))
 const chevronIcon = (open: boolean) => (
   <svg
     width="12" height="12" viewBox="0 0 24 24" fill="none"
