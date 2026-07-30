@@ -130,7 +130,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
     if (trigger !== undefined && trigger !== 0) setOpen(true)
   }, [trigger])
 
-  // Hijack all alphanuerical keypress on the page to open the search bar
+  // Hijack all alphanumeric keypresses on the page to open the search bar
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (open) return
