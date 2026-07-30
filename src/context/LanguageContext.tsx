@@ -56,6 +56,9 @@ export interface Translations {
   chart_download: string
   // Phylo tree
   tree_download: string
+  tree_zoom_in: string
+  tree_zoom_out: string
+  tree_zoom_reset: string
   // Graph page
   graph_title: string
   graph_result: string
@@ -196,6 +199,9 @@ const translations: Record<Lang, Translations> = {
     chart_select_columns: 'Select X and Y columns to generate the chart.',
     chart_download: 'Download chart',
     tree_download: 'Download SVG',
+    tree_zoom_in: 'Zoom in',
+    tree_zoom_out: 'Zoom out',
+    tree_zoom_reset: 'Reset Zoom',
     graph_title: 'Graph View',
     graph_result: 'Result',
     graph_layout: 'Layout',
@@ -326,6 +332,9 @@ const translations: Record<Lang, Translations> = {
     chart_select_columns: 'Sélectionnez les colonnes X et Y pour générer le graphique.',
     chart_download: 'Télécharger le graphique',
     tree_download: 'Télécharger SVG',
+    tree_zoom_in: 'Zoom in',
+    tree_zoom_out: 'Zoom out',
+    tree_zoom_reset: 'Rétablir le zoom par défaut',
     graph_title: 'Vue graphique',
     graph_result: 'Résultat',
     graph_layout: 'Disposition',
@@ -417,8 +426,8 @@ const translations: Record<Lang, Translations> = {
     nav_dark_mode: 'Modo oscuro',
     nav_light_mode: 'Modo claro',
     nav_language: 'Selección de idioma',
-    nav_toggle_open: 'Barra lateral abierta',
-    nav_toggle_close: 'Cerrar la barra lateral',
+    nav_toggle_open: 'Abrir sidebar',
+    nav_toggle_close: 'Cerrar sidebar',
     compare_title: 'Comparar análisis',
     compare_select_analyses: 'Seleccionar análisis',
     compare_analysis_a: 'Análisis A',
@@ -456,6 +465,9 @@ const translations: Record<Lang, Translations> = {
     chart_select_columns: 'Selecciona las columnas X e Y para generar el gráfico.',
     chart_download: 'Descargar gráfico',
     tree_download: 'Descargar SVG',
+    tree_zoom_in: 'Zoom más',
+    tree_zoom_out: 'Zoom menos',
+    tree_zoom_reset: 'Reiniciar el zoom',
     graph_title: 'Vista de grafo',
     graph_result: 'Resultado',
     graph_layout: 'Disposición',
