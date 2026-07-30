@@ -2,11 +2,28 @@ import type { CSSProperties } from 'react'
 import type { AnalysisSettings } from '../../../services/api'
 import PageGrid, { PageField, inputStyle } from '../../atoms/PageGrid/PageGrid'
 import { useLang } from '../../../context/LanguageContext'
+import { useLayoutEffect, useState } from 'react'
 
 interface Props {
   settings: Partial<AnalysisSettings>
   onChange: (key: keyof AnalysisSettings, value: unknown) => void
   readOnly?: boolean
+}
+
+const smallWidth = 800
+
+/** True once `window.innerWidth < 800`; drives the mobile/overlay nav behavior (full-width, elevated `zIndex` when expanded). */
+function useWindowSizeSmall() {
+  const [sizeBool, setSizeBool] = useState([window.innerWidth < smallWidth]);
+  useLayoutEffect(() => {
+    function updateSize() {
+    setSizeBool([window.innerWidth < smallWidth]);
+    }
+    window.addEventListener('resize', updateSize);
+    updateSize();
+    return () => window.removeEventListener('resize', updateSize);
+}, []);
+return sizeBool;
 }
 
 /**
@@ -19,6 +36,7 @@ interface Props {
  */
 export default function AnalysisSettingsForm({ settings, onChange, readOnly = false }: Props) {
   const { t } = useLang()
+  const [isSmall] = useWindowSizeSmall()
 
   const num = (key: keyof AnalysisSettings, fallback: number) => {
     const v = settings[key]
@@ -70,7 +88,7 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
         <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 12px' }}>
           {t.settings_analysis_params}
         </p>
-        <PageGrid columns={3}>
+        <PageGrid columns={isSmall ? 1 : 3}>
           <PageField label={t.settings_bootstrap}>
             {numInput('bootstrap_threshold', 10, { min: '0' })}
           </PageField>
@@ -109,7 +127,7 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
         <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 12px' }}>
           {t.settings_methods}
         </p>
-        <PageGrid columns={3}>
+        <PageGrid columns={isSmall ? 1 : 3}>
           <PageField label={t.settings_alignment_method}>
             {sel('alignment_method', 'PairwiseAlign', ['NoAlignment', 'PairwiseAlign', 'MUSCLE', 'CLUSTALW', 'MAFFT'])}
           </PageField>
@@ -139,7 +157,7 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
         <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 12px' }}>
           {t.settings_preprocessing}
         </p>
-        <PageGrid columns={2}>
+        <PageGrid columns={isSmall ? 1 : 2}>
           <PageField label={t.settings_genetic_preprocessing}>
             {sel('preprocessing_genetic', 'Disabled', ['Disabled', 'Enabled'])}
           </PageField>
