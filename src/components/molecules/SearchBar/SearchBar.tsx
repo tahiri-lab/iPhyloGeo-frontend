@@ -137,6 +137,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         setIsControlHeld(false)
         setIsAltHeld(false)
         e.preventDefault()
+        if (triggerSend !== undefined) triggerSend()
       }
     }
 
