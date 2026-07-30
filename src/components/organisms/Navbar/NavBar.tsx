@@ -172,7 +172,8 @@ export default function NavBar() {
         transition: 'width 0.3s ease-in-out',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }}
     >
       {/* Header */}
