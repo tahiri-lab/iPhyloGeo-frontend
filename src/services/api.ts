@@ -7,7 +7,6 @@
 
 const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
-// Configuration du timeout et des retries
 const REQUEST_TIMEOUT_MS = 10000;
 const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 500;
