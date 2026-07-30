@@ -13,6 +13,8 @@ export interface Translations {
   nav_dark_mode: string
   nav_light_mode: string
   nav_language: string
+  nav_toggle_open: string
+  nav_toggle_close: string
   // Compare page
   compare_title: string
   compare_select_analyses: string
@@ -154,7 +156,9 @@ const translations: Record<Lang, Translations> = {
     nav_compare: 'Compare',
     nav_dark_mode: 'Dark mode',
     nav_light_mode: 'Light mode',
-    nav_language: 'Language',
+    nav_language: 'Language selection',
+    nav_toggle_open: 'Open sidebar',
+    nav_toggle_close: 'Close sidebar',
     compare_title: 'Compare Analyses',
     compare_select_analyses: 'Select Analyses',
     compare_analysis_a: 'Analysis A',
@@ -282,7 +286,9 @@ const translations: Record<Lang, Translations> = {
     nav_compare: 'Comparer',
     nav_dark_mode: 'Mode sombre',
     nav_light_mode: 'Mode clair',
-    nav_language: 'Langue',
+    nav_language: 'Selection de la langue',
+    nav_toggle_open: 'Ouvrir la barre de navigation',
+    nav_toggle_close: 'Fermer la barre de navigation',
     compare_title: 'Comparer les analyses',
     compare_select_analyses: 'Sélectionner les analyses',
     compare_analysis_a: 'Analyse A',
@@ -410,7 +416,9 @@ const translations: Record<Lang, Translations> = {
     nav_compare: 'Comparar',
     nav_dark_mode: 'Modo oscuro',
     nav_light_mode: 'Modo claro',
-    nav_language: 'Idioma',
+    nav_language: 'Selección de idioma',
+    nav_toggle_open: 'Barra lateral abierta',
+    nav_toggle_close: 'Cerrar la barra lateral',
     compare_title: 'Comparar análisis',
     compare_select_analyses: 'Seleccionar análisis',
     compare_analysis_a: 'Análisis A',
