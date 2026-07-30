@@ -9,6 +9,14 @@ interface Props {
   readOnly?: boolean
 }
 
+/**
+ * Full pipeline-settings form, shared by SettingsPage (global settings) and
+ * UploadPage/ResultsPage (per-run override) — `readOnly` renders the same
+ * layout non-interactively for the "view config" case. Note the single
+ * "Permutations" field writes to *both* `permutations_mantel_test` and
+ * `permutations_protest` — there's no separate UI for them even though the
+ * underlying settings are independent fields.
+ */
 export default function AnalysisSettingsForm({ settings, onChange, readOnly = false }: Props) {
   const { t } = useLang()
 

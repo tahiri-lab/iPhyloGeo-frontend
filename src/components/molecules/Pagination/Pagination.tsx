@@ -13,6 +13,7 @@ interface TreePaginationProps {
   minItemWidth?: number
 }
 
+/** Builds a compact page-number list with `'...'` gaps (e.g. `1 … 4 5 6 … 12`); returns every page as-is when `total <= 7`. */
 function getPageNumbers(current: number, total: number): (number | '...')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   const pages: (number | '...')[] = []
@@ -26,6 +27,15 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
   return pages
 }
 
+/**
+ * Paginates an arbitrary list of `{ name, newick }` trees into a responsive
+ * grid, calling `renderTree` per visible item (so callers control what each
+ * tree actually renders as — `PhyloTree` or `TreeGraph`). Resets are the
+ * caller's responsibility: pass a new `key` on the parent when the tree set
+ * changes to reset back to page 1, as ResultsPage/ComparePage/GraphPage do
+ * (`key={selected._id}-...`). Unlike the rest of the app, this component's
+ * pagination controls use Tailwind utility classes instead of inline styles.
+ */
 export default function TreePagination({ trees, renderTree, pageSize = 6, minItemWidth = 420 }: TreePaginationProps) {
   const [page, setPage] = useState(1)
   const totalPages = Math.max(1, Math.ceil(trees.length / pageSize))

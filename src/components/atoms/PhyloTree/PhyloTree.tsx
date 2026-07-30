@@ -19,6 +19,12 @@ const X_COL = 30
 const Y_ROW = 30
 const LABEL_PAD = 12
 
+/**
+ * Computes an (x, y) position for every node of a parsed Newick tree as a
+ * rectangular cladogram: x from cumulative branch length (or unit depth if
+ * every branch length is 0 — the `maxDepth === 0` fallback), y from leaf
+ * order with internal nodes centered over their children's midpoint.
+ */
 function buildLayout(root: TreeNode): { nodes: Map<TreeNode, LayoutNode>; svgW: number; svgH: number } {
   const depthMap = new Map<TreeNode, number>()
   function setDepths(node: TreeNode, d: number) {
@@ -87,6 +93,12 @@ interface PhyloTreeProps {
   darkMode?: boolean
 }
 
+/**
+ * Renders one Newick string as a static, hand-drawn SVG cladogram (no graph
+ * library — see {@link buildLayout}) with pan (native scroll), zoom, and SVG
+ * export. For the interactive Cytoscape-based tree used in Graph/Compare,
+ * see `CytoscapeTree` instead.
+ */
 export default function PhyloTree({ newick, name, darkMode: darkModeProp }: PhyloTreeProps) {
   const { theme } = useTheme()
   const darkMode = darkModeProp ?? theme === 'dark'

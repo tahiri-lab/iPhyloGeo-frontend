@@ -41,6 +41,13 @@ const PIE_COLORS = ['#AD00FA', '#00faad', '#faad00', '#fa0057', '#00aafa', '#aaf
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * Ad-hoc chart builder for a climatic file preview (`UploadPage`): shows the
+ * raw rows in a collapsible table, and lets the user pick any two columns
+ * plus a chart type (Bar/Scatter/Line/Pie) to visualize them, with SVG
+ * export. Purely a preview tool over `ClimaticPreview` data — it doesn't
+ * affect what columns the pipeline itself uses.
+ */
 export default function ClimateChartBuilder({ data }: { data: ClimaticPreview }) {
   const { columns, rows } = data
   const { t } = useLang()

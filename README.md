@@ -128,7 +128,7 @@ src/
 - **Side-by-side analysis comparison** — Compare page renders genetic trees, bootstrap charts, and statistical test results for two analyses simultaneously
 - **Safari compatibility** — result IDs stored in `localStorage` and sent as query parameter to work around cross-origin cookie restrictions (ITP)
 - **Results export** — XLSX download, SVG chart and tree export
-- **Debug panel** — server status, error log, and app dependency graph (dev only)
+- **Debug panel** — server status, error log, and a static app-structure diagram, via the floating button in the corner. Not gated behind a dev-mode check — it renders in production builds too (see `components/organisms/README.md`)
 
 ---
 

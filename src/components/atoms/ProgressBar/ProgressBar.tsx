@@ -3,6 +3,7 @@ interface ProgressBarProps {
   progress?: number // 0–100
 }
 
+/** Fill bar for job progress (0–100); omit `progress` for an indeterminate full-width bar. Styled via the `.progress-bar`/`.progress-bar-fill` classes, not inline. */
 export default function ProgressBar({ visible = true, progress }: ProgressBarProps) {
   if (!visible) return null
   return (

@@ -15,6 +15,15 @@ interface CytoElement {
 
 // ── Cytoscape Elements Builder ────────────────────────────────────────────────
 
+/**
+ * Converts a parsed Newick tree into Cytoscape nodes/edges for a rectangular
+ * layout. Each branch is drawn as two straight edges through an invisible
+ * `.support` waypoint node (rather than one diagonal edge) so the tree reads
+ * as a right-angle cladogram even though Cytoscape edges are straight lines —
+ * `.nonterminal`/`.support` nodes are sized to ~0 and hidden via
+ * `background-opacity: 0` in {@link getCytoscapeStylesheet}, not deleted,
+ * because they still anchor the edge geometry.
+ */
 export function buildCytoElements(root: TreeNode, xLen = 30, yLen = 30): CytoElement[] {
   const depthMap = new Map<TreeNode, number>()
   const setDepths = (node: TreeNode, d: number) => {
@@ -92,6 +101,7 @@ export function buildCytoElements(root: TreeNode, xLen = 30, yLen = 30): CytoEle
 
 // ── Stylesheet ────────────────────────────────────────────────────────────────
 
+/** Cytoscape stylesheet for the tree; `layout` only affects label placement (bottom+center for force layouts, right+middle otherwise). */
 export function getCytoscapeStylesheet(darkMode: boolean, layout: LayoutType) {
   const textColor = darkMode ? '#FFFFFF' : '#1A1C1E'
   const lineColor = darkMode ? '#9F74D0' : '#B593DD'
@@ -139,6 +149,14 @@ export function getCytoscapeStylesheet(darkMode: boolean, layout: LayoutType) {
 
 // ── TreeGraph component ───────────────────────────────────────────────────────
 
+/**
+ * Interactive, pannable/zoomable tree for one Newick string, rebuilt from
+ * scratch on every `newick`/`layout`/`darkMode` change (Cytoscape has no
+ * cheap in-place layout-switch API here, so the instance is destroyed and
+ * recreated rather than updated). `layout === 'left-right'` is implemented
+ * by swapping x/y on the already-computed top-down positions rather than a
+ * separate layout algorithm.
+ */
 export function TreeGraph({
   newick,
   name,

@@ -105,6 +105,7 @@ const LANGS: Lang[] = ['en', 'fr', 'es']
 
 const smallWidth = 800
 
+/** True once `window.innerWidth < 800`; drives the mobile/overlay nav behavior (full-width, elevated `zIndex` when expanded). */
 function useWindowSizeSmall() {
   const [sizeBool, setSizeBool] = useState([window.innerWidth < smallWidth]);
   useLayoutEffect(() => {
@@ -118,6 +119,14 @@ function useWindowSizeSmall() {
 return sizeBool;
 }
 
+/**
+ * Sidebar navigation: collapses to icon-only, auto-expands on hover and
+ * auto-collapses on mouse leave, and switches to a full-width mobile overlay
+ * below 800px (see {@link useWindowSizeSmall}). On mount, and on link hover,
+ * it prefetches route chunks via `prefetchLikelyRoutes`/`prefetchRoute`
+ * (during browser idle time) so navigation feels instant — see
+ * ARCHITECTURE.md's Routing section for why this exists.
+ */
 export default function NavBar() {
   const [minimized, setMinimized] = useState(window.innerWidth < 800 ? true : false)
   const [isSmall] = useWindowSizeSmall()

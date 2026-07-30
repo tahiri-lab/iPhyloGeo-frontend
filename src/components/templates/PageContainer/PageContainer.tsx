@@ -5,6 +5,7 @@ interface PageContainerProps {
   title?: string
 }
 
+/** Centered, viewport-width-padded wrapper with an optional page `<h1>`. Every route except `/` renders its content inside this. */
 export default function PageContainer({ children, title }: PageContainerProps) {
   return (
     <div

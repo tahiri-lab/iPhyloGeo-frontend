@@ -225,6 +225,10 @@ export const settings = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
+    reset: () =>
+    request<AnalysisSettings>("/api/settings/reset", {
+      method: "POST",
+    }),
 };
 
 // ── File Previews ─────────────────────────────────────────────────────────────

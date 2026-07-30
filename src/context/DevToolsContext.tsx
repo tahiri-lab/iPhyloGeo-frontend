@@ -20,6 +20,10 @@ const DevToolsContext = createContext<DevToolsContextType>({
 
 let _id = 0
 
+/**
+ * In-memory error log backing the dev-only debug panel ({@link DevToolsPanel}).
+ * Keeps only the last 30 entries; nothing here is persisted, so it resets on reload.
+ */
 export function DevToolsProvider({ children }: { children: ReactNode }) {
   const [errors, setErrors] = useState<DevError[]>([])
 
@@ -36,4 +40,5 @@ export function DevToolsProvider({ children }: { children: ReactNode }) {
   )
 }
 
+/** Access the dev error log and reporting functions. Must be used under `<DevToolsProvider>`. */
 export const useDevTools = () => useContext(DevToolsContext)
