@@ -9,6 +9,13 @@ export const LAYOUTS: { value: LayoutType; label: string }[] = [
   { value: 'force-loose', label: 'force-loose' },
 ]
 
+/**
+ * Maps a `LayoutType` to Cytoscape layout options, shared by every tree
+ * viewer (`CytoscapeTree`, `DevToolsPanel`'s app graph). `top-down`/
+ * `left-right` reuse the same `'preset'` positions computed in
+ * `buildCytoElements` (left-right just swaps x/y at render time); `force`/
+ * `force-loose` are two tunings of Cytoscape's `cose` physics layout.
+ */
 export function getLayoutConfig(layout: LayoutType): cytoscape.LayoutOptions {
   switch (layout) {
     case 'top-down':

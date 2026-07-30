@@ -4,6 +4,7 @@ interface HelpSectionProps {
   children: ReactNode
 }
 
+/** Container for a `HelpHeading`/`HelpText` pair list, used inside the "How it works" / parameter-guide sections on Upload and Settings. Spans the full grid width via `gridColumn: '1 / -1'` when nested in a `PageGrid`. */
 export function HelpSection({ children }: HelpSectionProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', gridColumn: '1 / -1' }}>

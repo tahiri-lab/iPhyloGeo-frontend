@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import * as HoverCard from '@radix-ui/react-hover-card'
+import { useLang } from '../../../context/LanguageContext'
+
+export interface SearchBarOptionHover {
+  text: string
+  content: ReactNode
+}
 
 export interface SearchBarOption {
   id: string
   label: string
+  hover?: SearchBarOptionHover
   sublabel?: string
   badge?: string
 }
@@ -15,6 +23,9 @@ interface SearchBarProps {
   trigger?: number
   triggerSend?: () => void
 }
+
+type SearchMode = 'name' | 'status' | 'date'
+const searchModes: SearchMode[] = ['name', 'status', 'date']
 
 const searchIcon = (
   <svg width="14" height="14" viewBox="0 0 192.904 192.904" style={{ fill: 'var(--text-secondary)', flexShrink: 0 }} aria-hidden="true">
@@ -36,21 +47,52 @@ const chevronIcon = (open: boolean) => (
   </svg>
 )
 
+/**
+ * Custom combobox for selecting a result: a filterable dropdown that can
+ * search by name (substring), exact status match, or a `YYYY-MM-DD` date
+ * substring against `sublabel`, selected via the mode `<select>` in the
+ * dropdown header. `option.hover` (used for the settings-preview badge on
+ * Results/Compare) renders as a Radix `HoverCard` — pass `null` explicitly
+ * for its unused fields if reusing `SettingsView` there, since it has no
+ * default props.
+ */
 export default function SearchBar({ options, value, onSelect, placeholder = 'Select a result…', triggerSend, trigger }: SearchBarProps) {
   const [open, setOpen] = useState(false)
+  const [searchMode, setSearchMode] = useState<SearchMode>('name')
   const [query, setQuery] = useState('')
-  const [showShortcuts, setShowShortcuts] = useState(false)
+  const { t } = useLang()
+
   const [isAltHeld, setIsAltHeld] = useState(false)
   const [isControlHeld, setIsControlHeld] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
   const [highlighted, setHighlighted] = useState(0)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const statusRef = useRef<HTMLSelectElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null)
 
   const selected = options.find(o => o.id === value) ?? null
   const filtered = useMemo(() => {
-    return query.trim()
-      ? options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
-      : options
+    return options.filter(o => {
+      // Filter options based on the selected search mode
+      if (!query.trim()) return true
+
+      if (searchMode === 'name') {
+        return o.label.toLowerCase().includes(query.toLowerCase())
+      }
+
+      if (searchMode === 'status') {
+        return o.badge?.toLowerCase() === query.toLowerCase()
+      }
+
+      if (searchMode === 'date') {
+        // Basic check to see if the sublabel or date contains the input value (YYYY-MM-DD)
+        return o.sublabel ? o.sublabel.includes(query) : false
+      }
+
+      return true
+    })
   }, [query])
 
   // The array reference always changes when filtered is recomputed so we need a stable way to compare
@@ -71,8 +113,19 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
   }, [])
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 0)
-  }, [open])
+    if (!open) return
+    switch (searchMode) {
+      case 'name':
+        setTimeout(() => inputRef.current?.focus(), 0)
+        break;
+      case 'date':
+        setTimeout(() => dateRef.current?.focus(), 0)
+        break;
+      case 'status':
+        setTimeout(() => statusRef.current?.focus(), 0)
+        break;
+    }
+  }, [open, searchMode])
 
   useEffect(() => {
     if (trigger !== undefined && trigger !== 0) setOpen(true)
@@ -81,21 +134,14 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
   // Hijack all alphanuerical keypress on the page to open the search bar
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
+      if (open) return
 
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      ) {
-        return
-      }
-
-      if (e.key == 'Escape' && !open) {
+      if (e.key == 'Escape') {
         setOpen(true)
       }
 
       if (/^[a-zA-Z0-9]$/.test(e.key)) {
+        setSearchMode('name')
         setQuery(e.key)
         setOpen(true)
         e.preventDefault()
@@ -108,7 +154,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         window.removeEventListener("keydown", handler)
       }
     }
-  }, [])
+  }, [open])
 
   useEffect(() => {
     const show = isAltHeld && isControlHeld;
@@ -126,21 +172,27 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
     }
   }
 
+  function reset() {
+    setQuery('')
+    setOpen(false)
+    setShowShortcuts(false)
+    setIsControlHeld(false)
+    setIsAltHeld(false)
+    setSearchMode('name')
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (isAltHeld && isControlHeld && /^[a-z0-9]$/.test(e.key)) {
       const jumpTo = filtered.at(shortcuts.indexOf(e.key))
       if (jumpTo) {
         onSelect(jumpTo.id)
-        setQuery('')
-        setOpen(false)
-        setShowShortcuts(false)
-        setIsControlHeld(false)
-        setIsAltHeld(false)
+        reset()
         e.preventDefault()
         if (triggerSend !== undefined) triggerSend()
       }
     }
 
+    const status = statusRef.current!;
     switch (e.key) {
       case 'Alt':
         setIsAltHeld(true)
@@ -149,8 +201,8 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         setIsControlHeld(true)
         break;
       case 'Escape':
-        setQuery('') 
         setOpen(false)
+        e.stopPropagation()
         break;
       case 'ArrowUp':
         if (highlighted == -1) {
@@ -160,18 +212,36 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         setHighlighted(h => (h - 1 + filtered.length) % filtered.length)
         e.preventDefault()
         break;
-      case 'Tab':
       case 'ArrowDown':
         setHighlighted(h => (h + 1 + filtered.length) % filtered.length)
         e.preventDefault()
         break;
+      case 'ArrowLeft':
+        if (searchMode == 'status') {
+          status.selectedIndex = (status.selectedIndex - 1 + status.options.length)
+            % status.options.length
+          status.dispatchEvent(new Event("change", { bubbles: true }));
+          e.preventDefault()
+        }
+        break;
+      case 'ArrowRight':
+        if (searchMode == 'status') {
+          status.selectedIndex = (status.selectedIndex + 1) % status.options.length,
+          status.dispatchEvent(new Event("change", { bubbles: true }));
+          e.preventDefault()
+        }
+        break;
+      case 'Tab':
+        const currModeIdx = searchModes.indexOf(searchMode)
+        setQuery('')
+        setSearchMode(searchModes[(currModeIdx + 1) % searchModes.length])
+        break;
       case 'Enter':
         if (highlighted >= 0) {
           onSelect(filtered[highlighted].id)
+          reset()
+          if (triggerSend !== undefined) triggerSend()
         }
-        setQuery('') 
-        setOpen(false)
-        if (triggerSend !== undefined) triggerSend()
         break;
     }
   }
@@ -202,7 +272,6 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
       >
         {searchIcon}
         <span style={{
-          flex: 1,
           fontSize: '14px',
           fontWeight: selected ? 600 : 400,
           color: selected ? 'var(--text)' : 'var(--text-secondary)',
@@ -212,6 +281,24 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         }}>
           {selected ? selected.label : placeholder}
         </span>
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center' }} >
+          {selected?.hover && <span style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            padding: '1px 6px',
+            borderRadius: '20px',
+            backgroundColor: 'var(--action)',
+            color: 'var(--primary)',
+            border: '1px solid var(--border)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em',
+            whiteSpace: 'nowrap',
+            marginLeft: '2px',
+          }}
+          >
+            {selected.hover.text}
+          </span>}
+        </div>
         {selected?.sublabel && (
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {selected.sublabel}
@@ -237,17 +324,17 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
             overflow: 'hidden',
           }}
         >
-          {/* Filter input */}
-          <div style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
+          {/* Filter control area */}
+          <div style={{ padding: '8px', borderBottom: '1px solid var(--border)', display: 'flex', gap: '8px' }}>
+
+            {/* Search mode selector */}
+            <select
+              value={searchMode}
+              onChange={e => {
+                setSearchMode(e.target.value as SearchMode)
+                setQuery('') // Reset query on mode change
               }}
-              placeholder="Filter…"
               style={{
-                width: '100%',
                 padding: '8px 10px',
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
@@ -255,9 +342,92 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                 color: 'var(--text)',
                 backgroundColor: 'var(--secondary)',
                 outline: 'none',
-                boxSizing: 'border-box',
+                cursor: 'pointer',
               }}
-            />
+            >
+              <option value="name">{t.results_searchFilterModeName}</option>
+              <option value="status">{t.results_searchFilterModeStatus}</option>
+              <option value="date">{t.results_searchFilterModeDate}</option>
+            </select>
+
+            {/* Conditional input based on search mode */}
+            <div style={{ flex: 1 }}>
+              {searchMode === 'name' && (
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value)
+                  }}
+                  placeholder={t.results_searchFilterByNamePlaceholder}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    backgroundColor: 'var(--secondary)',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+
+              {searchMode === 'status' && (
+                <select
+                  value={query}
+                  ref={statusRef}
+                  onChange={e => setQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    backgroundColor: 'var(--secondary)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <option value="">{t.results_searchFilterByStatusAll}</option>
+                  <option value="complete">{t.results_searchFilterByStatusComplete}</option>
+                  <option value="pending">{t.results_searchFilterByStatusPending}</option>
+                  <option value="failed">{t.results_searchFilterByStatusFailed}</option>
+                </select>
+              )}
+
+              {searchMode === 'date' && (
+                <input
+                  type="date"
+                  value={query}
+                  ref={dateRef}
+                  onChange={e => setQuery(e.target.value)}
+                  onClick={e => {
+                    // Open native date picker when clicking anywhere in the input
+                    try {
+                      e.currentTarget.showPicker()
+                    } catch {
+                      // Fallback for older browsers
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    backgroundColor: 'var(--secondary)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+            </div>
           </div>
 
           {/* Options list */}
@@ -274,7 +444,10 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                     key={opt.id}
                     role="option"
                     aria-selected={isSelected}
-                    onClick={() => { onSelect(opt.id); setOpen(false); setQuery('') }}
+                    onClick={() => {
+                      onSelect(opt.id)
+                      reset()
+                    }}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -298,18 +471,62 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                       gap: 20,
                       alignItems: 'center',
                     }}>
-                      {showShortcuts && <div style={{
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        backgroundColor: 'var(--secondary)',
-                        borderRadius: '100%',
-                        border: '1px solid var(--action)',
-                        width: '24px'
-                      }}>
-                        {shortcuts[i]}
-                      </div>}
+                    {showShortcuts && <div style={{
+                      fontSize: '14px',
+                      textAlign: 'center',
+                      backgroundColor: 'var(--secondary)',
+                      borderRadius: '100%',
+                      border: '1px solid var(--action)',
+                      width: '24px'
+                    }}>
+                      {shortcuts[i]}
+                    </div>}
                       <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                         <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{opt.label}</span>
+                        {opt.hover && (
+                          <HoverCard.Root>
+                            <HoverCard.Trigger asChild>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '20px',
+                                backgroundColor: 'var(--action)',
+                                color: 'var(--primary)',
+                                border: '1px solid var(--border)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03em',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0,
+                                marginLeft: '10px',
+                              }}
+                              >
+                                {opt.hover.text}
+                              </span>
+                            </HoverCard.Trigger>
+                            <HoverCard.Portal>
+                              <HoverCard.Content
+                                side="right"
+                                sideOffset={5}
+                                style={{
+                                  background: 'var(--primary)',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: '8px',
+                                  padding: '10px',
+                                  boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                                  zIndex: 1000,
+
+                                  maxWidth: 'min(400px, calc(100vw - 40px))',
+                                  maxHeight: 'calc(80vh)',
+                                  overflowY: 'auto',
+                                  overflowX: 'auto',
+                                }}
+                              >
+                                {opt.hover.content}
+                              </HoverCard.Content>
+                            </HoverCard.Portal>
+                          </HoverCard.Root>
+                        )}
                         {opt.sublabel && (
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '10px' }}>
                             {opt.sublabel}
@@ -331,7 +548,8 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
                         marginLeft: '10px',
-                      }}>
+                      }}
+                      >
                         {opt.badge}
                       </span>
                     )}

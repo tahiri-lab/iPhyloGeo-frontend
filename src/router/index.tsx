@@ -16,6 +16,7 @@ const ResultsPage = lazy(importResultsPage)
 const GraphPage = lazy(importGraphPage)
 const ComparePage = lazy(importComparePage)
 
+/** Trigger a route's lazy `import()` ahead of navigation (e.g. on link hover) without rendering it. */
 export function prefetchRoute(path: string): Promise<unknown> {
   switch (path) {
     case '/':
@@ -35,6 +36,7 @@ export function prefetchRoute(path: string): Promise<unknown> {
   }
 }
 
+/** Prefetch the Upload and Results page chunks — the two most likely next destinations from any page. */
 export function prefetchLikelyRoutes(): Promise<unknown[]> {
   return Promise.all([
     importUploadPage(),

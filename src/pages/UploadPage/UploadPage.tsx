@@ -19,6 +19,7 @@ interface UploadedFile {
   file: File
 }
 
+/** Drag-and-drop / click-to-browse zone for a single file; shows uploading/uploaded/empty states. */
 function FileDropZone({
   label,
   accept,
@@ -98,6 +99,15 @@ function FileDropZone({
   )
 }
 
+/**
+ * `/upload` — file intake, inline per-analysis settings, and pipeline launch.
+ * Each file upload fires immediately (not deferred to submit), and the
+ * analysis name is checked for uniqueness with a 400ms debounce against
+ * `results.checkName`. Settings edited here are sent as a one-off override
+ * with the job — see API.md's Jobs section for how that differs from the
+ * global settings on `/settings`. After `jobs.create`, polls job status
+ * every 2s until `complete` (→ navigates to `/results`) or `error`.
+ */
 export default function UploadPage() {
   const navigate = useNavigate()
   const { t, lang } = useLang()
@@ -109,11 +119,12 @@ export default function UploadPage() {
   const [uploadingGenetic, setUploadingGenetic] = useState(false)
   const [running, setRunning] = useState(false)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [resultId, setResultId] = useState<string | null>(null)
+  const [, setResultId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
   const [emailSent, setEmailSent] = useState(false)
+  const notifyEmailRef = useRef<string | null>(null)
 
   // Settings
   const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
@@ -214,6 +225,7 @@ export default function UploadPage() {
     setJobStatus(null)
     setResultId(null)
     setEmailSent(false)
+    notifyEmailRef.current = null
     try {
       const { result_id } = await api.jobs.create({
         climatic_file_id: climaticId,
@@ -228,6 +240,9 @@ export default function UploadPage() {
           const status = await api.jobs.status(result_id)
           setJobStatus(status)
           if (status.status === 'complete') {
+            if (notifyEmailRef.current && result_id) {
+              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => {})
+            }
             navigate('/results')
           } else if (status.status === 'error') {
             setError(status.error ?? 'Pipeline failed')
@@ -247,14 +262,9 @@ export default function UploadPage() {
     }
   }
 
-  const handleEmailSubmit = async (email: string) => {
-    if (!resultId) return
-    try {
-      await api.results.email(resultId, email, lang)
-      setEmailSent(true)
-    } catch {
-      // silently ignore — job still runs
-    }
+  const handleEmailSubmit = (email: string) => {
+    notifyEmailRef.current = email
+    setEmailSent(true)
   }
 
   return (
@@ -302,7 +312,7 @@ export default function UploadPage() {
               onFocus={e => (e.target.style.borderColor = 'var(--secondary-hover)')}
               onBlur={e => (e.target.style.borderColor = 'var(--secondary)')}
             />
-            {nameTaken && !checkingName && (
+            {(nameTaken || analysisName.match(/(.*) \(edit (\d+)\)$/)) && !checkingName && (
               <span style={{ fontSize: '12px', color: 'var(--error)' }}>{t.upload_name_taken}</span>
             )}
           </div>

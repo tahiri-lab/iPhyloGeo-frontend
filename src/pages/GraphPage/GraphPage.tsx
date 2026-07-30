@@ -13,6 +13,12 @@ import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTre
 
 // ── GraphPage ─────────────────────────────────────────────────────────────────
 
+/**
+ * `/graph` — interactive Cytoscape.js viewer for a single completed result's
+ * trees. Auto-selects the first completed result on load, and re-fetches the
+ * full result (with tree data) only if the list response didn't already
+ * include it — list responses can omit tree payloads for size.
+ */
 export default function GraphPage() {
   const [results, setResults] = useState<AnalysisResult[]>([])
   const [selected, setSelected] = useState<AnalysisResult | null>(null)
