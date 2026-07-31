@@ -141,6 +141,9 @@ export interface Translations {
   settings_reset_confirm_yes: string
   settings_reset_confirm_no: string
   settings_reset_success: string
+  cancel_confirm_message: string
+  cancel_confirm_yes: string
+  cancel_confirm_no: string
   // Upload page additions
   upload_analysis_name: string
   upload_name_taken: string
@@ -154,6 +157,9 @@ export interface Translations {
   results_rerun: string
   results_rerunning: string
   results_config_cancel: string
+  results_delete_confirm_message: string
+  results_delete_confirm_yes: string
+  results_delete_confirm_no: string
   // Errors Settings
   error_window_size: string
   error_step_size: string
@@ -165,6 +171,7 @@ export interface Translations {
   // Shared
   btn_download: string
   btn_send: string
+  btn_cancel: string
 }
 
 const translations: Record<Lang, Translations> = {
@@ -296,6 +303,9 @@ const translations: Record<Lang, Translations> = {
     settings_reset_confirm_message: 'Are you sure you want to restore all settings to factory defaults? This action cannot be undone.',
     settings_reset_confirm_yes: 'Reset',
     settings_reset_confirm_no: 'Cancel',
+    cancel_confirm_message: 'Are you sure you want to cancel this analysis?',
+    cancel_confirm_yes: 'Cancel',
+    cancel_confirm_no: 'Go back',
     settings_reset_success: 'Settings restored to defaults.',
     upload_analysis_name: 'Analysis name',
     upload_name_taken: 'A result with this name already exists',
@@ -308,8 +318,12 @@ const translations: Record<Lang, Translations> = {
     results_rerun: 'Re-run with new settings',
     results_rerunning: 'Re-running…',
     results_config_cancel: 'Cancel',
+    results_delete_confirm_message: 'Are you sure you want to delete this analysis result?',
+    results_delete_confirm_yes: 'Delete',
+    results_delete_confirm_no: 'Cancel',
     btn_download: 'Download',
     btn_send: 'Send',
+    btn_cancel: 'Cancel',
     error_window_size: "Window size must be a positive number (> 0).",
     error_step_size: "Step size must be a positive number (> 0).",
     error_rate_similarity: "Rate similarity must be a non-negative number (>= 0).",
@@ -446,6 +460,9 @@ const translations: Record<Lang, Translations> = {
     settings_reset_confirm_message: 'Êtes-vous sûr de vouloir restaurer tous les paramètres aux valeurs par défaut ? Cette action ne peut pas être annulée.',
     settings_reset_confirm_yes: 'Réinitialiser',
     settings_reset_confirm_no: 'Annuler',
+    cancel_confirm_message: 'Êtes-vous certain de vouloir annuler l\'analyse?',
+    cancel_confirm_yes: 'Annuler',
+    cancel_confirm_no: 'Retourner en arrière',
     settings_reset_success: 'Paramètres restaurés aux valeurs par défaut.',
     upload_analysis_name: "Nom de l'analyse",
     upload_name_taken: 'Un résultat avec ce nom existe déjà',
@@ -458,8 +475,12 @@ const translations: Record<Lang, Translations> = {
     results_rerun: 'Relancer avec de nouveaux paramètres',
     results_rerunning: 'Relancement…',
     results_config_cancel: 'Annuler',
+    results_delete_confirm_message: 'Êtes-vous certain de vouloir supprimer ce résultat d\'analyse?',
+    results_delete_confirm_yes: 'Supprimer',
+    results_delete_confirm_no: 'Annuler',
     btn_download: 'Télécharger',
     btn_send: 'Envoyer',
+    btn_cancel: 'Annuler',
     error_window_size: "La taille de la fenêtre doit être un nombre strictement positif (> 0).",
     error_step_size: "Le pas de la fenêtre doit être un nombre strictement positif (> 0).",
     error_rate_similarity: "Le taux de similarité doit être un nombre positif ou nul (>= 0).",
@@ -597,6 +618,9 @@ const translations: Record<Lang, Translations> = {
     settings_reset_confirm_yes: 'Restaurar',
     settings_reset_confirm_no: 'Cancelar',
     settings_reset_success: 'Ajustes restaurados a los valores por defecto.',
+    cancel_confirm_message: '¿Está seguro de que desea cancelar el análisis?',
+    cancel_confirm_yes: 'Cancelar',
+    cancel_confirm_no: 'Volver atrás', 
     upload_analysis_name: 'Nombre del análisis',
     upload_name_taken: 'Ya existe un resultado con este nombre',
     upload_settings_section: 'Configuración del análisis',
@@ -608,8 +632,12 @@ const translations: Record<Lang, Translations> = {
     results_rerun: 'Re-ejecutar con nuevos ajustes',
     results_rerunning: 'Re-ejecutando…',
     results_config_cancel: 'Cancelar',
+    results_delete_confirm_message: '¿Está seguro de que desea eliminar este resultado del análisis?',
+    results_delete_confirm_yes: 'Eliminar',
+    results_delete_confirm_no: 'Cancelar',
     btn_download: 'Descargar',
     btn_send: 'Enviar',
+    btn_cancel: 'Cancelar',
     error_window_size: "El tamaño de la ventana debe ser un número positivo (> 0).",
     error_step_size: "El tamaño del paso debe ser un número positivo (> 0).",
     error_rate_similarity: "La tasa de similitud debe ser un número no negativo (>= 0).",
