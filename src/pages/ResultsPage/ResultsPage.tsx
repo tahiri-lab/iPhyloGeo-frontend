@@ -302,56 +302,107 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null)
   const [emailMsg, setEmailMsg] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [, setSearchParams] = useSearchParams()
   const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
   const [rerunning, setRerunning] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
+
   const { clearSelection } = usePresets()
 
   useEffect(() => {
     api.settings.get().then(s => setGlobalSettings(s)).catch(() => { })
   }, [])
-  const initialIdRef = useRef(searchParams.get('id'))
+  const currentSelectedIdRef = useRef<string | null>(null)
+
   const { t } = useLang()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    api.settings.get().then(s => setGlobalSettings(s)).catch(() => { })
+  }, [])
+  
   const selectResult = useCallback((r: AnalysisResult, updateUrl = true) => {
+    const targetId = r._id
+    currentSelectedIdRef.current = targetId
+
     setEmailMsg(null)
     setConfigPanel(null)
     setSelected(null)
-    if (updateUrl) setSearchParams({ id: r._id }, { replace: true })
+
+    if (updateUrl) {
+      setSearchParams({ id: targetId }, { replace: true })
+    }
+
+    // If the result isn't complete or has trees, we can show it immediately without fetching details
+    if (r.status !== 'complete' || r.climatic_trees || r.genetic_trees) {
+      setSelected(r)
+      setLoadingDetail(false)
+      return
+    }
+
     setLoadingDetail(true)
-    const minDelay = new Promise<void>(res => setTimeout(res, 2000))
-    const dataFetch = r.status === 'complete' && !r.climatic_trees && !r.genetic_trees
-      ? api.results.get(r._id).then(full => setSelected(full)).catch(() => setSelected(r))
-      : Promise.resolve(setSelected(r))
-    Promise.all([minDelay, dataFetch]).finally(() => setLoadingDetail(false))
+
+    api.results.get(targetId)
+      .then(fetchedResult => {
+        if (currentSelectedIdRef.current === targetId) {
+          setSelected(fetchedResult)
+        }
+      })
+      .catch(() => {
+        if (currentSelectedIdRef.current === targetId) {
+          setSelected(r)
+        }
+      })
+      .finally(() => {
+        if (currentSelectedIdRef.current === targetId) {
+          setLoadingDetail(false)
+        }
+      })
   }, [setSearchParams])
 
   useEffect(() => {
-    const idFromUrl = initialIdRef.current
+    let isMounted = true
+
     api.results.list({ limit: 200 })
       .then(({ data }) => {
+        if (!isMounted) return
         setResults(data)
+
+        // Read the `id` from the URL query params, but only on the first mount 
+        const currentParams = new URLSearchParams(window.location.search)
+        const idFromUrl = currentParams.get('id')
+
         const target = idFromUrl
           ? data.find(r => r._id === idFromUrl)
           : data.find(r => r.status === 'complete')
+
         if (target) {
           selectResult(target, !idFromUrl)
         } else if (idFromUrl) {
           setLoadingDetail(true)
           api.results.get(idFromUrl)
             .then(result => {
+              if (!isMounted) return
               setResults(prev => [...prev, result])
               selectResult(result, false)
             })
             .catch(() => setError('Result not found'))
-            .finally(() => setLoadingDetail(false))
+            .finally(() => {
+              if (isMounted) setLoadingDetail(false)
+            })
         }
       })
-      .catch(e => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false))
-  }, [selectResult])
+      .catch(e => {
+        if (isMounted) setError(e instanceof Error ? e.message : String(e))
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleDelete = async (r: AnalysisResult) => {
     try {
@@ -495,9 +546,16 @@ export default function ResultsPage() {
               {selected && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '2px' }}>
                   <Badge>{selected.status}</Badge>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    {new Date(selected.created_at).toLocaleString()}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      <strong>{t.results_created}</strong> {new Date(selected.created_at).toLocaleString()}
+                    </span>
+                    {selected.expired_at && (
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <strong>{t.results_expired}</strong> {new Date(selected.expired_at).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
                   {selected.status === 'complete' && (
                     <Button
                       variant="download"

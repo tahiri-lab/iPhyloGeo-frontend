@@ -46,6 +46,8 @@ export interface Translations {
   results_searchFilterModeName: string
   results_searchFilterModeStatus: string
   results_searchFilterModeDate: string
+  results_created : string
+  results_expired : string
   // Climate chart builder
   chart_data_preview: string
   chart_hide: string
@@ -212,6 +214,8 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Name",
     results_searchFilterModeStatus: "Status",
     results_searchFilterModeDate: "Date",
+    results_created: "Created on",
+    results_expired: "Expires on",
     chart_data_preview: 'Data Preview',
     chart_hide: '▲ Hide',
     chart_show: '▼ Show',
@@ -364,6 +368,8 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Nom",
     results_searchFilterModeStatus: "Statut",
     results_searchFilterModeDate: "Date",
+    results_created: "Créé le",
+    results_expired: "Expire le",
     chart_data_preview: 'Aperçu des données',
     chart_hide: '▲ Masquer',
     chart_show: '▼ Afficher',
@@ -516,6 +522,8 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Nombre",
     results_searchFilterModeStatus: "Estado",
     results_searchFilterModeDate: "Fecha",
+    results_created: "Creado el",
+    results_expired: "Expira el",
     chart_data_preview: 'Vista previa de datos',
     chart_hide: '▲ Ocultar',
     chart_show: '▼ Mostrar',
@@ -647,10 +655,34 @@ const LanguageContext = createContext<LanguageContextType>({
  * {@link Translations} and a value in all three `translations` entries below —
  * TypeScript will error on any locale missing a key.
  */
+
+/**
+ * Helper to determine the initial language based on local storage and browser locale.
+ */
+function getInitialLanguage(): Lang {
+  //Check local storage override first
+  const savedLang = localStorage.getItem('iphylogeo-lang') as Lang | null
+  if (savedLang && (savedLang === 'en' || savedLang === 'fr' || savedLang === 'es')) {
+    return savedLang
+  }
+
+  //Read browser locale (e.g., "fr-FR" -> "fr")
+  const browserLang = navigator.language.split('-')[0] as Lang
+
+  if (browserLang === 'en' || browserLang === 'fr' || browserLang === 'es') {
+    return browserLang
+  }
+
+  //Default fallback
+  return 'fr'
+}
+
+/**
+ * Provides the active language and its translation table, persisted to
+ * `localStorage` under `iphylogeo-lang`. Auto-detects browser language on first visit.
+ */
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    return (localStorage.getItem('iphylogeo-lang') as Lang) || 'en'
-  })
+  const [lang, setLangState] = useState<Lang>(getInitialLanguage)
 
   const setLang = (l: Lang) => {
     setLangState(l)
