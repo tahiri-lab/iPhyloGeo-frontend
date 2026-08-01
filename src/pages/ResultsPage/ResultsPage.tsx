@@ -16,6 +16,8 @@ import api, { type AnalysisResult, type AnalysisSettings } from '../../services/
 import { useLang } from '../../context/LanguageContext'
 import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 import { validateSettings } from '../../utils/validationParamsSettings'
+import { usePresets } from '../../context/PresetContext'
+import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -304,7 +306,14 @@ export default function ResultsPage() {
   const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
   const [rerunning, setRerunning] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
+
+  const { clearSelection } = usePresets()
+
+  useEffect(() => {
+    api.settings.get().then(s => setGlobalSettings(s)).catch(() => { })
+  }, [])
   const currentSelectedIdRef = useRef<string | null>(null)
+
   const { t } = useLang()
   const navigate = useNavigate()
 
@@ -580,15 +589,33 @@ export default function ResultsPage() {
                 No configuration saved for this analysis.
               </p>
             ) : (
-              <AnalysisSettingsForm
-                settings={configPanel.settings}
-                onChange={(key, value) => {
-                  if (configPanel.mode === 'edit') {
-                    setConfigPanel(prev => prev ? { ...prev, settings: { ...prev.settings, [key]: value } } : null)
-                  }
-                }}
-                readOnly={configPanel.mode === 'view'}
-              />
+              <>
+                {/* PresetBar */}
+                {configPanel.mode === 'edit' && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <PresetsToolbar
+                      currentSettings={configPanel.settings}
+                      onApplySettings={(newSettings: Partial<AnalysisSettings>) => {
+                        setConfigPanel(prev => prev ? { ...prev, settings: newSettings } : null)
+                      }}
+                      onResetToDefault={() => {
+                        setConfigPanel(prev => prev ? { ...prev, settings: globalSettings } : null)
+                        clearSelection()
+                      }}
+                    />
+                  </div>
+                )}
+
+                <AnalysisSettingsForm
+                  settings={configPanel.settings}
+                  onChange={(key, value) => {
+                    if (configPanel.mode === 'edit') {
+                      setConfigPanel(prev => prev ? { ...prev, settings: { ...prev.settings, [key]: value } } : null)
+                    }
+                  }}
+                  readOnly={configPanel.mode === 'view'}
+                />
+              </>
             )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'flex-end' }}>
               <button
