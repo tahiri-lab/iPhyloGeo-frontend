@@ -198,7 +198,14 @@ export function TreeGraph({
       maxZoom: 5,
     })
 
+    const handler = () => {
+      const cy = cyRef.current!
+      cy.fit(undefined, 0.05 * cy.width())
+    }
+    window.addEventListener("resize", handler)
+
     return () => {
+      window.removeEventListener("resize", handler)
       cyRef.current?.destroy()
       cyRef.current = null
     }
