@@ -86,6 +86,7 @@ interface CoffeeLoaderProps {
   progress?: number
   onEmailSubmit?: (email: string) => void
   emailSent?: boolean
+  ref: React.RefObject<HTMLDialogElement>
 }
 
 /**
@@ -100,6 +101,7 @@ export default function CoffeeLoader({
   progress,
   onEmailSubmit,
   emailSent = false,
+  ref,
 }: CoffeeLoaderProps) {
   const { t } = useLang()
   const [email, setEmail] = useState('')
@@ -115,108 +117,113 @@ export default function CoffeeLoader({
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 600,
-        backdropFilter: 'blur(6px)',
-      }}
-    >
-      <div
+    <>
+      <style>
+        {`
+            .confirm-dialog::backdrop {
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(8px);
+            }
+        `}
+      </style>
+      <dialog
+        ref={ref}
+        className='confirm-dialog'
         style={{
-          background: 'var(--primary)',
-          borderRadius: 24,
-          padding: '40px 36px 36px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 18,
-          boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
-          width: 380,
-          maxWidth: '92vw',
-          border: '1px solid var(--border)',
+            borderRadius: 24,
+            boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
+            border: '3px solid var(--border)',
+            background: 'var(--primary)',
+            width: 380,
+            maxWidth: '92vw',
         }}
       >
-        <CoffeeMug />
+        <div
+          style={{
+            padding: '40px 36px 36px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 18,
+          }}
+        >
+          <CoffeeMug />
 
-        {/* Status message */}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
-            {statusLabel ?? t.results_loading}
-          </p>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
-            This may take a few minutes…
-          </p>
-        </div>
-
-        {/* Progress bar */}
-        {progress !== undefined && (
-          <div style={{ width: '100%' }}>
-            <ProgressBar visible progress={progress} />
+          {/* Status message */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
+              {statusLabel ?? t.results_loading}
+            </p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
+              This may take a few minutes…
+            </p>
           </div>
-        )}
 
-        {/* Divider */}
-        {onEmailSubmit && (
-          <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 18 }}>
-            {emailSent ? (
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--action)', textAlign: 'center', fontWeight: 600 }}>
-                {t.loading_notify_sent} {email} ✓
-              </p>
-            ) : (
-              <>
-                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                  {t.loading_notify_prompt}
+          {/* Progress bar */}
+          {progress !== undefined && (
+            <div style={{ width: '100%' }}>
+              <ProgressBar visible progress={progress} />
+            </div>
+          )}
+
+          {/* Divider */}
+          {onEmailSubmit && (
+            <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 18 }}>
+              {emailSent ? (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--action)', textAlign: 'center', fontWeight: 600 }}>
+                  {t.loading_notify_sent} {email} ✓
                 </p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="email"
-                    value={email}
-                    placeholder="you@example.com"
-                    onChange={e => { setEmail(e.target.value); setEmailErr('') }}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                    style={{
-                      flex: 1,
-                      borderRadius: 10,
-                      border: `1.5px solid ${emailErr ? 'var(--error)' : 'var(--border)'}`,
-                      padding: '8px 12px',
-                      fontSize: 13,
-                      color: 'var(--text)',
-                      background: 'var(--secondary)',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={handleSubmit}
-                    style={{
-                      borderRadius: 10,
-                      border: 'none',
-                      background: 'var(--action)',
-                      color: '#fff',
-                      padding: '8px 14px',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {t.btn_send}
-                  </button>
-                </div>
-                {emailErr && (
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--error)' }}>{emailErr}</p>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+              ) : (
+                <>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                    {t.loading_notify_prompt}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      autoFocus
+                      type="email"
+                      value={email}
+                      placeholder="you@example.com"
+                      onChange={e => { setEmail(e.target.value); setEmailErr('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                      style={{
+                        flex: 1,
+                        borderRadius: 10,
+                        border: `1.5px solid ${emailErr ? 'var(--error)' : 'var(--border)'}`,
+                        padding: '8px 12px',
+                        fontSize: 13,
+                        color: 'var(--text)',
+                        background: 'var(--secondary)',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      onClick={handleSubmit}
+                      style={{
+                        borderRadius: 10,
+                        border: 'none',
+                        background: 'var(--action)',
+                        color: '#fff',
+                        padding: '8px 14px',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {t.btn_send}
+                    </button>
+                  </div>
+                  {emailErr && (
+                    <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--error)' }}>{emailErr}</p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </dialog>
+    </>
   )
 }
