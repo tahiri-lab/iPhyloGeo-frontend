@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { LanguageProvider } from '../../context/LanguageContext'
+import { PresetsProvider } from '../../context/PresetContext'
 import UploadPage from '../../pages/UploadPage/UploadPage'
 
 vi.mock('../../services/api', () => ({
@@ -20,7 +21,9 @@ vi.mock('react-router-dom', async () => {
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <MemoryRouter>
-      <LanguageProvider>{children}</LanguageProvider>
+      <PresetsProvider>
+        <LanguageProvider>{children}</LanguageProvider>
+      </PresetsProvider>
     </MemoryRouter>
   )
 }
