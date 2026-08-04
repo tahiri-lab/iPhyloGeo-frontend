@@ -1,54 +1,27 @@
 import { useMemo, useState } from 'react'
 import type { GeneticPreview } from '../../../services/api'
 import { useTheme } from '../../../context/ThemeContext'
-import { type Acid, sequenceInfo, ACID_ASSOCIATIONS } from '../../../utils/sequences'
 
 // ── Nucleotide colors (matches dashbio AlignmentChart scheme) ─────────────────
+
 const NT_COLORS: Record<string, string> = {
-  // Canonical bases
-  A: '#5BC0EB', // blue
-  T: '#E84855', // red
-  C: '#9BC53D', // green
-  G: '#FDE74C', // yellow
-  U: '#E84855', // RNA T equivalent
-
-  N: '#9E9E9E',
-  R: '#B81DDF',
-  Y: '#1DDF7E',
-  W: '#F28E2B',
-  S: '#4E79A7',
-  K: '#FF9DA7',
-  M: '#59A14F',
-  B: '#76B7B2',
-  D: '#EDC948',
-  H: '#BAB0AC',
-  V: '#9C755F',
-
-  // Gaps
+  A: '#5BC0EB',
+  T: '#E84855',
+  C: '#9BC53D',
+  G: '#FDE74C',
+  U: '#E84855',
+  N: '#555555',
   '-': 'transparent',
   ' ': 'transparent',
-};
+}
 
 const NT_TEXT: Record<string, string> = {
   A: '#1a1c1e',
   T: '#fff',
   C: '#1a1c1e',
   G: '#1a1c1e',
-
   U: '#fff',
-
-  N: '#fff',
-  R: '#fff',
-  Y: '#1a1c1e',
-  W: '#fff',
-  S: '#fff',
-  K: '#fff',
-  M: '#fff',
-  B: '#1a1c1e',
-  D: '#1a1c1e',
-  H: '#1a1c1e',
-  V: '#fff',
-
+  N: '#ccc',
   '-': '#666',
 }
 
@@ -58,6 +31,38 @@ function ntColor(ch: string): { bg: string; fg: string } {
     bg: NT_COLORS[upper] ?? '#444',
     fg: NT_TEXT[upper] ?? '#fff',
   }
+}
+
+// ── Conservation + gap bar heights ───────────────────────────────────────────
+
+interface ColStats {
+  conservation: number // 0-1 (fraction of most common non-gap nt)
+  gap: number         // 0-1 (fraction that are gaps)
+}
+
+function computeColStats(seqs: string[], len: number): ColStats[] {
+  return Array.from({ length: len }, (_, i) => {
+    const chars = seqs.map(s => (s[i] ?? '-').toUpperCase())
+    const gapCount = chars.filter(c => c === '-' || c === ' ').length
+    const nonGap = chars.filter(c => c !== '-' && c !== ' ')
+    const freq: Record<string, number> = {}
+    for (const c of nonGap) freq[c] = (freq[c] ?? 0) + 1
+    const maxFreq = Math.max(0, ...Object.values(freq))
+    return {
+      conservation: nonGap.length > 0 ? maxFreq / chars.length : 0,
+      gap: gapCount / chars.length,
+    }
+  })
+}
+
+function computeConsensus(seqs: string[], len: number): string {
+  return Array.from({ length: len }, (_, i) => {
+    const chars = seqs.map(s => (s[i] ?? '-').toUpperCase()).filter(c => c !== '-' && c !== ' ')
+    if (chars.length === 0) return '-'
+    const freq: Record<string, number> = {}
+    for (const c of chars) freq[c] = (freq[c] ?? 0) + 1
+    return Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0]
+  }).join('')
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -94,7 +99,8 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
     [seqList, startPos, displayLen]
   )
 
-  const colInfos = useMemo(() => sequenceInfo(window, displayLen), [window, displayLen])
+  const colStats = useMemo(() => computeColStats(window, displayLen), [window, displayLen])
+  const consensus = useMemo(() => computeConsensus(window, displayLen), [window, displayLen])
 
   const totalCols = seqList[0]?.length ?? 0
   const maxStart = Math.max(0, totalCols - displayLen)
@@ -132,8 +138,8 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
         <svg width={svgW} height={svgH} style={{ display: 'block' }}>
 
           {/* Conservation bars */}
-          {colInfos.map((info, ci) => {
-            const barH = info.conservation * (BAR_AREA_H - 8)
+          {colStats.map((stat, ci) => {
+            const barH = stat.conservation * (BAR_AREA_H - 8)
             return (
               <rect
                 key={`con${ci}`}
@@ -148,8 +154,8 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
           })}
 
           {/* Gap bars (small, at top) */}
-          {colInfos.map((info, ci) => {
-            const barH = info.gap * 8
+          {colStats.map((stat, ci) => {
+            const barH = stat.gap * 8
             return barH > 0 ? (
               <rect
                 key={`gap${ci}`}
@@ -229,8 +235,8 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
             >
               Consensus
             </text>
-            {colInfos.map((info, ci) => {
-              const { bg, fg } = ntColor(info.consensus)
+            {Array.from(consensus).map((ch, ci) => {
+              const { bg, fg } = ntColor(ch)
               const y = gridTop + names.length * CELL_H
               return (
                 <g key={ci}>
@@ -246,7 +252,7 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
                     fontWeight={700}
                     textAnchor="middle"
                   >
-                    {info.consensus}
+                    {ch.toUpperCase()}
                   </text>
                 </g>
               )
@@ -264,14 +270,16 @@ export default function AlignmentViewer({ data }: { data: GeneticPreview }) {
 
       {/* Color legend */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        {(Object.keys(ACID_ASSOCIATIONS)).map(nt => (
+        {(['A', 'T', 'C', 'G'] as const).map(nt => (
           <div key={nt} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 14, height: 14, background: NT_COLORS[nt], borderRadius: 3 }} />
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              {nt}{ACID_ASSOCIATIONS[nt as Acid].length > 1 && ` (${ACID_ASSOCIATIONS[nt as Acid].join('/')})`}
-            </span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{nt}</span>
           </div>
         ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ width: 14, height: 14, background: '#555', borderRadius: 3 }} />
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>N/gap</span>
+        </div>
       </div>
     </div>
   )
