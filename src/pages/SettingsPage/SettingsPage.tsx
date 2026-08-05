@@ -18,14 +18,21 @@ import { validateSettings } from '../../utils/validationParamsSettings'
 export default function SettingsPage() {
   const { t } = useLang()
   const [settings, setSettings] = useState<Partial<AnalysisSettings>>({})
+  const [initialSettings, setInitialSettings] = useState<Partial<AnalysisSettings>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [resetting, setResetting] = useState(false) // Track the reset request state
+  const [resetting, setResetting] = useState(false)
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+
+  // Verify if the current settings differ from the initial settings to determine if the "Save" button should be enabled
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(initialSettings)
 
   useEffect(() => {
     api.settings.get()
-      .then(data => setSettings(data))
+      .then(data => {
+        setSettings(data)
+        setInitialSettings(data) 
+      })
       .catch(e => setMessage({ text: `Failed to load settings: ${e instanceof Error ? e.message : String(e)}`, ok: false }))
       .finally(() => setLoading(false))
   }, [])
@@ -49,6 +56,13 @@ export default function SettingsPage() {
       setMessage({ text: t.settings_saved, ok: true })
     } catch (e) {
       setMessage({ text: `Failed to save: ${e instanceof Error ? e.message : String(e)}`, ok: false })
+
+      try {
+        const persistedSettings = await api.settings.get()
+        setSettings(persistedSettings)
+      } catch {
+        // If we fail to reload the settings, we just leave them as-is. The user can try again later.
+      }
     } finally {
       setSaving(false)
     }
@@ -70,9 +84,19 @@ export default function SettingsPage() {
     try {
       const defaultSettings = await api.settings.reset()
       setSettings(defaultSettings)
+      setInitialSettings(defaultSettings)
       setMessage({ text: t.settings_reset_success, ok: true })
     } catch (e) {
       setMessage({ text: `Failed to reset: ${e instanceof Error ? e.message : String(e)}`, ok: false })
+
+      // Rollback to the persisted settings if the reset fails, so the user doesn't lose their current settings.
+      try {
+        const persistedSettings = await api.settings.get()
+        setSettings(persistedSettings)
+        setInitialSettings(persistedSettings)
+      } catch {
+        // If we fail to reload the settings, we just leave them as-is. The user can try again later.
+      }
     } finally {
       setResetting(false)
     }
@@ -98,10 +122,10 @@ export default function SettingsPage() {
         <PageSection title={t.settings_save_section}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Save Button */}
-            <Button variant="actions" onClick={handleSave} disabled={saving || resetting}>
+            <Button variant="actions" onClick={handleSave} disabled={saving || resetting || !isDirty}>
               {saving ? t.settings_saving : t.settings_save_btn}
             </Button>
-            
+
             {/* Reset Button */}
             <Button variant="actions" onClick={handleReset} disabled={saving || resetting}>
               {t.settings_reset_btn}
