@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
-import { validateEmail } from '../../../utils/validation'
+import EmailInput from '../../../components/molecules/EmailInput/EmailInput'
 
 function CoffeeMug() {
   return (
@@ -85,7 +85,7 @@ interface CoffeeLoaderProps {
   statusLabel?: string
   progress?: number
   onEmailSubmit?: (email: string) => void
-  emailSent?: boolean
+  emailSent?: boolean,
 }
 
 /**
@@ -103,16 +103,6 @@ export default function CoffeeLoader({
 }: CoffeeLoaderProps) {
   const { t } = useLang()
   const [email, setEmail] = useState('')
-  const [emailErr, setEmailErr] = useState('')
-
-  const handleSubmit = () => {
-    if (!email || !validateEmail(email)) {
-      setEmailErr('Please enter a valid email.')
-      return
-    }
-    setEmailErr('')
-    onEmailSubmit?.(email)
-  }
 
   return (
     <div
@@ -137,7 +127,7 @@ export default function CoffeeLoader({
           alignItems: 'center',
           gap: 18,
           boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
-          width: 380,
+          width: 400,
           maxWidth: '92vw',
           border: '1px solid var(--border)',
         }}
@@ -169,50 +159,15 @@ export default function CoffeeLoader({
                 {t.loading_notify_sent} {email} ✓
               </p>
             ) : (
-              <>
-                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                  {t.loading_notify_prompt}
-                </p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="email"
-                    value={email}
-                    placeholder="you@example.com"
-                    onChange={e => { setEmail(e.target.value); setEmailErr('') }}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                    style={{
-                      flex: 1,
-                      borderRadius: 10,
-                      border: `1.5px solid ${emailErr ? 'var(--error)' : 'var(--border)'}`,
-                      padding: '8px 12px',
-                      fontSize: 13,
-                      color: 'var(--text)',
-                      background: 'var(--secondary)',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={handleSubmit}
-                    style={{
-                      borderRadius: 10,
-                      border: 'none',
-                      background: 'var(--action)',
-                      color: '#fff',
-                      padding: '8px 14px',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {t.btn_send}
-                  </button>
-                </div>
-                {emailErr && (
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--error)' }}>{emailErr}</p>
-                )}
-              </>
+              <EmailInput
+                description={t.loading_notify_prompt}
+                buttonLabel={t.btn_confirm}
+                secondary={true}
+                onSend={(e) => {
+                  onEmailSubmit?.(e)
+                  setEmail(e)
+                }}
+              />
             )}
           </div>
         )}

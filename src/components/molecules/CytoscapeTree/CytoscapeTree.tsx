@@ -1,9 +1,14 @@
 import { useEffect, useRef, useMemo } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import cytoscape from 'cytoscape'
+import svg from 'cytoscape-svg';
 import { parseNewick, type TreeNode } from '../../../utils/newickParser'
+import { triggerDownload } from '../../../utils/svgExport'
 import { type LayoutType, getLayoutConfig } from '../../../constants/layoutConfig'
 import { zoomBtnStyle } from '../../../styles/commonStyles'
+import DownloadButton from '../../atoms/DownloadButton/DownloadButton'
+
+cytoscape.use(svg)
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -218,9 +223,23 @@ export function TreeGraph({
     }
   }, [baseElements, layout, darkMode])
 
+  function handleDownloadSVG() {
+    if (!cyRef.current) return;
+
+    const svg = cyRef.current.svg({
+      full: true,
+      scale: 1,
+    });
+
+    triggerDownload(svg, `${name}.svg`)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{name}</h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{name}</h3>
+        <DownloadButton onClick={handleDownloadSVG} />
+      </div>
       <div style={{ position: 'relative' }}>
         <div
           ref={containerRef}
