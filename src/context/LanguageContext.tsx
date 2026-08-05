@@ -13,8 +13,6 @@ export interface Translations {
   nav_dark_mode: string
   nav_light_mode: string
   nav_language: string
-  nav_toggle_open: string
-  nav_toggle_close: string
   // Compare page
   compare_title: string
   compare_select_analyses: string
@@ -48,8 +46,6 @@ export interface Translations {
   results_searchFilterModeName: string
   results_searchFilterModeStatus: string
   results_searchFilterModeDate: string
-  results_created : string
-  results_expired : string
   // Climate chart builder
   chart_data_preview: string
   chart_hide: string
@@ -66,9 +62,6 @@ export interface Translations {
   chart_download: string
   // Phylo tree
   tree_download: string
-  tree_zoom_in: string
-  tree_zoom_out: string
-  tree_zoom_reset: string
   // Graph page
   graph_title: string
   graph_result: string
@@ -175,9 +168,6 @@ export interface Translations {
   error_bootstrap_threshold: string
   error_dist_threshold: string
   error_correlation_threshold: string
-  //Preset
-  preset_select: string
-  preset_name: string
   // Shared
   btn_download: string
   btn_send: string
@@ -195,9 +185,7 @@ const translations: Record<Lang, Translations> = {
     nav_compare: 'Compare',
     nav_dark_mode: 'Dark mode',
     nav_light_mode: 'Light mode',
-    nav_language: 'Language selection',
-    nav_toggle_open: 'Open sidebar',
-    nav_toggle_close: 'Close sidebar',
+    nav_language: 'Language',
     compare_title: 'Compare Analyses',
     compare_select_analyses: 'Select Analyses',
     compare_analysis_a: 'Analysis A',
@@ -229,8 +217,6 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Name",
     results_searchFilterModeStatus: "Status",
     results_searchFilterModeDate: "Date",
-    results_created: "Created on",
-    results_expired: "Expires on",
     chart_data_preview: 'Data Preview',
     chart_hide: '▲ Hide',
     chart_show: '▼ Show',
@@ -245,9 +231,6 @@ const translations: Record<Lang, Translations> = {
     chart_select_columns: 'Select X and Y columns to generate the chart.',
     chart_download: 'Download chart',
     tree_download: 'Download SVG',
-    tree_zoom_in: 'Zoom in',
-    tree_zoom_out: 'Zoom out',
-    tree_zoom_reset: 'Reset Zoom',
     graph_title: 'Graph View',
     graph_result: 'Result',
     graph_layout: 'Layout',
@@ -350,8 +333,6 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Bootstrap threshold must be a non-negative number (>= 0).",
     error_dist_threshold: "Distance threshold must be a non-negative number (>= 0).",
     error_correlation_threshold: "Correlation threshold must be between 0 and 1.",
-    preset_select: 'Select Preset',
-    preset_name: 'Preset name',
   },
   fr: {
     nav_home: 'Accueil',
@@ -362,9 +343,7 @@ const translations: Record<Lang, Translations> = {
     nav_compare: 'Comparer',
     nav_dark_mode: 'Mode sombre',
     nav_light_mode: 'Mode clair',
-    nav_language: 'Selection de la langue',
-    nav_toggle_open: 'Ouvrir la barre de navigation',
-    nav_toggle_close: 'Fermer la barre de navigation',
+    nav_language: 'Langue',
     compare_title: 'Comparer les analyses',
     compare_select_analyses: 'Sélectionner les analyses',
     compare_analysis_a: 'Analyse A',
@@ -396,8 +375,6 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterModeName: "Nom",
     results_searchFilterModeStatus: "Statut",
     results_searchFilterModeDate: "Date",
-    results_created: "Créé le",
-    results_expired: "Expire le",
     chart_data_preview: 'Aperçu des données',
     chart_hide: '▲ Masquer',
     chart_show: '▼ Afficher',
@@ -412,9 +389,6 @@ const translations: Record<Lang, Translations> = {
     chart_select_columns: 'Sélectionnez les colonnes X et Y pour générer le graphique.',
     chart_download: 'Télécharger le graphique',
     tree_download: 'Télécharger SVG',
-    tree_zoom_in: 'Zoom in',
-    tree_zoom_out: 'Zoom out',
-    tree_zoom_reset: 'Rétablir le zoom par défaut',
     graph_title: 'Vue graphique',
     graph_result: 'Résultat',
     graph_layout: 'Disposition',
@@ -517,8 +491,6 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Le seuil de bootstrap doit être un nombre positif ou nul (>= 0).",
     error_dist_threshold: "Le seuil de distance doit être un nombre positif ou nul (>= 0).",
     error_correlation_threshold: "Le seuil de corrélation doit être compris entre 0 et 1.",
-    preset_select: 'Choisir un préréglage',
-    preset_name: 'Nom du préréglage',
   },
   es: {
     nav_home: 'Inicio',
@@ -529,9 +501,7 @@ const translations: Record<Lang, Translations> = {
     nav_compare: 'Comparar',
     nav_dark_mode: 'Modo oscuro',
     nav_light_mode: 'Modo claro',
-    nav_language: 'Selección de idioma',
-    nav_toggle_open: 'Abrir sidebar',
-    nav_toggle_close: 'Cerrar sidebar',
+    nav_language: 'Idioma',
     compare_title: 'Comparar análisis',
     compare_select_analyses: 'Seleccionar análisis',
     compare_analysis_a: 'Análisis A',
@@ -558,13 +528,11 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filtrar por nombre…",
     results_searchFilterByStatusComplete: "Completado",
     results_searchFilterByStatusPending: "Pendiente",
-    results_searchFilterByStatusFailed: "Fallido",
+    results_searchFilterByStatusFailed: "Fallido",  
     results_searchFilterByStatusAll: "Todos los estados",
     results_searchFilterModeName: "Nombre",
     results_searchFilterModeStatus: "Estado",
     results_searchFilterModeDate: "Fecha",
-    results_created: "Creado el",
-    results_expired: "Expira el",
     chart_data_preview: 'Vista previa de datos',
     chart_hide: '▲ Ocultar',
     chart_show: '▼ Mostrar',
@@ -579,9 +547,6 @@ const translations: Record<Lang, Translations> = {
     chart_select_columns: 'Selecciona las columnas X e Y para generar el gráfico.',
     chart_download: 'Descargar gráfico',
     tree_download: 'Descargar SVG',
-    tree_zoom_in: 'Zoom más',
-    tree_zoom_out: 'Zoom menos',
-    tree_zoom_reset: 'Reiniciar el zoom',
     graph_title: 'Vista de grafo',
     graph_result: 'Resultado',
     graph_layout: 'Disposición',
@@ -684,8 +649,6 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "El umbral de bootstrap debe ser un número no negativo (>= 0).",
     error_dist_threshold: "El umbral de distancia debe ser un número no negativo (>= 0).",
     error_correlation_threshold: "El umbral de correlación debe estar entre 0 y 1.",
-    preset_select: 'Seleccionar preajuste',
-    preset_name: 'Nombre del preajuste',
   },
 }
 
@@ -707,34 +670,10 @@ const LanguageContext = createContext<LanguageContextType>({
  * {@link Translations} and a value in all three `translations` entries below —
  * TypeScript will error on any locale missing a key.
  */
-
-/**
- * Helper to determine the initial language based on local storage and browser locale.
- */
-function getInitialLanguage(): Lang {
-  //Check local storage override first
-  const savedLang = localStorage.getItem('iphylogeo-lang') as Lang | null
-  if (savedLang && (savedLang === 'en' || savedLang === 'fr' || savedLang === 'es')) {
-    return savedLang
-  }
-
-  //Read browser locale (e.g., "fr-FR" -> "fr")
-  const browserLang = navigator.language.split('-')[0] as Lang
-
-  if (browserLang === 'en' || browserLang === 'fr' || browserLang === 'es') {
-    return browserLang
-  }
-
-  //Default fallback
-  return 'fr'
-}
-
-/**
- * Provides the active language and its translation table, persisted to
- * `localStorage` under `iphylogeo-lang`. Auto-detects browser language on first visit.
- */
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(getInitialLanguage)
+  const [lang, setLangState] = useState<Lang>(() => {
+    return (localStorage.getItem('iphylogeo-lang') as Lang) || 'en'
+  })
 
   const setLang = (l: Lang) => {
     setLangState(l)
