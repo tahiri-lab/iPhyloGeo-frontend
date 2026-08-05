@@ -1,4 +1,4 @@
-function triggerDownload(svgStr: string, filename: string): void {
+export function triggerDownload(svgStr: string, filename: string): void {
   const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
