@@ -4,6 +4,7 @@ import ProgressBar from '../ProgressBar/ProgressBar'
 import { validateEmail } from '../../../utils/validation'
 import ConfirmDialog from '../../molecules/ConfirmDialog/ConfirmDialog'
 import api from '../../../services/api'
+import EmailInput from '../../molecules/EmailInput/EmailInput'
 
 function CoffeeMug() {
   return (
