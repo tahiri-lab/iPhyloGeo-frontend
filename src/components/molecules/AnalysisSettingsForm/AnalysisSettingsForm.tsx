@@ -34,6 +34,14 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
   const blurStyle: CSSProperties = { borderColor: 'var(--secondary)' }
 
   const numInput = (key: keyof AnalysisSettings, fallback: number, extra?: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div
+      style={{
+        display: 'inline-flex',
+        borderRadius: 4,
+        overflow: 'hidden',
+        border: '2px solid var(--secondary)',
+      }}
+    >
     <input
       type="number"
       value={num(key, fallback)}
@@ -41,9 +49,50 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
       onChange={readOnly ? undefined : e => onChange(key, Number(e.target.value))}
       onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
       onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
-      style={{ ...inputStyle, opacity: readOnly ? 0.75 : 1, cursor: readOnly ? 'default' : undefined }}
-      {...extra}
-    />
+      style={{
+        width: '100%',
+        padding: '10px 14px',
+        borderRadius: '10px',
+        backgroundColor: 'var(--primary)',
+        color: 'var(--text)',
+        fontSize: '14px',
+        fontWeight: 600,
+        boxSizing: 'border-box',
+        outline: 'none',
+        transition: 'border-color 0.2s ease',
+        opacity: readOnly ? 0.75 : 1,
+        cursor: readOnly ? 'default' : undefined
+      }}
+      {...extra} />
+    <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          fontSize: '13px',
+          paddingRight: '8px',
+          margin: 'none',
+          gap: '3px',
+          lineHeight: '1',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => onChange(key, Number(num(key, fallback)) + 1)}
+          style={{ cursor: 'pointer' }}
+        >
+          ▲
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onChange(key, Number(num(key, fallback)) - 1)}
+          style={{ cursor: 'pointer' }}
+        >
+          ▼
+        </button>
+      </div>
+    </div>
   )
 
   const selectStyle: CSSProperties = {
