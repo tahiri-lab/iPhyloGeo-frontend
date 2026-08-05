@@ -191,19 +191,33 @@ export function TreeGraph({
           : el)
       : baseElements
 
+    const layoutOptions = getLayoutConfig(layout)
+
     cyRef.current?.destroy()
     cyRef.current = cytoscape({
       container: containerRef.current,
       elements: elements as cytoscape.ElementDefinition[],
       style: getCytoscapeStylesheet(darkMode, layout) as cytoscape.StylesheetJson,
-      layout: getLayoutConfig(layout),
+      layout: layoutOptions,
       userZoomingEnabled: true,
       userPanningEnabled: true,
       minZoom: 0.1,
       maxZoom: 5,
     })
 
+    let timeout: number;
+    const handler = () => {
+      clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        const cy = cyRef.current;
+        cy.resize();
+        cy.fit(undefined, layoutOptions.padding);
+      }, 22);
+    };
+    window.addEventListener("resize", handler)
+
     return () => {
+      window.removeEventListener("resize", handler)
       cyRef.current?.destroy()
       cyRef.current = null
     }
