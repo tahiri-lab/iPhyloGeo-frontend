@@ -185,7 +185,6 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
     if (isAltHeld && isControlHeld && /^[a-z0-9]$/.test(e.key)) {
       const jumpTo = filtered.at(shortcuts.indexOf(e.key))
       if (jumpTo) {
-        alert("lol")
         onSelect(jumpTo.id)
         reset()
         e.preventDefault()
@@ -216,7 +215,8 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         if (selectedRef.current)
           selectedRef.current?.scrollIntoView({
             behavior: 'smooth',
-            block: 'nearest',
+            block: 'center',
+            inline: 'nearest',
           })
         break;
       case 'ArrowDown':
@@ -225,7 +225,8 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         if (selectedRef.current)
           selectedRef.current?.scrollIntoView({
             behavior: 'smooth',
-            block: 'nearest',
+            block: 'center',
+            inline: 'nearest',
           })
         break;
       case 'ArrowLeft':
