@@ -53,6 +53,8 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
           borderRadius: 4,
           overflow: 'hidden',
           border: '2px solid var(--secondary)',
+          backgroundColor: 'var(--primary)',
+          borderRadius: '10px',
         }}
       >
         <input
@@ -63,10 +65,9 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
           onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
           onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
           style={{
-            height: '39px',
+            height: '38px',
             width: '100%',
             padding: '10px 14px',
-            borderRadius: '10px',
             backgroundColor: 'var(--primary)',
             color: 'var(--text)',
             fontSize: '14px',
@@ -89,6 +90,7 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
             paddingRight: '8px',
             gap: '3px',
             lineHeight: '1',
+            color: 'var(--action)',
           }}
         >
           <button
