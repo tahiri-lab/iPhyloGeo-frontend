@@ -70,6 +70,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
   const inputRef = useRef<HTMLInputElement>(null)
   const statusRef = useRef<HTMLSelectElement>(null);
   const dateRef = useRef<HTMLInputElement>(null)
+  const selectedRef = useRef<HTMLElement>(null)
 
   const selected = options.find(o => o.id === value) ?? null
   const filtered = useMemo(() => {
@@ -184,9 +185,11 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
     if (isAltHeld && isControlHeld && /^[a-z0-9]$/.test(e.key)) {
       const jumpTo = filtered.at(shortcuts.indexOf(e.key))
       if (jumpTo) {
+        alert("lol")
         onSelect(jumpTo.id)
         reset()
         e.preventDefault()
+        e.stopPropagation()
         if (triggerSend !== undefined) triggerSend()
       }
     }
@@ -210,10 +213,20 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         }
         setHighlighted(h => (h - 1 + filtered.length) % filtered.length)
         e.preventDefault()
+        if (selectedRef.current)
+          selectedRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          })
         break;
       case 'ArrowDown':
         setHighlighted(h => (h + 1 + filtered.length) % filtered.length)
         e.preventDefault()
+        if (selectedRef.current)
+          selectedRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          })
         break;
       case 'ArrowLeft':
         if (searchMode == 'status') {
@@ -443,6 +456,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                     key={opt.id}
                     role="option"
                     aria-selected={isSelected}
+                    ref={isSelected ? selectedRef : undefined}
                     onClick={() => {
                       onSelect(opt.id)
                       reset()
