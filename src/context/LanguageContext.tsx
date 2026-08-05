@@ -182,6 +182,7 @@ export interface Translations {
   btn_download: string
   btn_send: string
   btn_cancel: string
+  btn_confirm: string
 }
 
 const translations: Record<Lang, Translations> = {
@@ -341,6 +342,7 @@ const translations: Record<Lang, Translations> = {
     btn_download: 'Download',
     btn_send: 'Send',
     btn_cancel: 'Cancel',
+    btn_confirm: 'Confirm',
     error_window_size: "Window size must be a positive number (> 0).",
     error_step_size: "Step size must be a positive number (> 0).",
     error_rate_similarity: "Rate similarity must be a non-negative number (>= 0).",
@@ -507,6 +509,7 @@ const translations: Record<Lang, Translations> = {
     btn_download: 'Télécharger',
     btn_send: 'Envoyer',
     btn_cancel: 'Annuler',
+    btn_confirm: 'Confirmer',
     error_window_size: "La taille de la fenêtre doit être un nombre strictement positif (> 0).",
     error_step_size: "Le pas de la fenêtre doit être un nombre strictement positif (> 0).",
     error_rate_similarity: "Le taux de similarité doit être un nombre positif ou nul (>= 0).",
@@ -673,6 +676,7 @@ const translations: Record<Lang, Translations> = {
     btn_download: 'Descargar',
     btn_send: 'Enviar',
     btn_cancel: 'Cancelar',
+    btn_confirm: 'Confirmar',
     error_window_size: "El tamaño de la ventana debe ser un número positivo (> 0).",
     error_step_size: "El tamaño del paso debe ser un número positivo (> 0).",
     error_rate_similarity: "La tasa de similitud debe ser un número no negativo (>= 0).",

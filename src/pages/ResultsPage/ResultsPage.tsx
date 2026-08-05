@@ -780,6 +780,7 @@ export default function ResultsPage() {
               {/* Email share */}
               <EmailInput
                 description={t.results_share_desc}
+                buttonLabel={t.btn_send}
                 onSend={handleEmail}
               />
               {emailMsg && (
