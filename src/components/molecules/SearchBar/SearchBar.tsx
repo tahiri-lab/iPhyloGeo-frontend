@@ -194,6 +194,8 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
     }
 
     const status = statusRef.current!;
+    const el = selectedRef.current
+    const parent = el?.parentElement
     switch (e.key) {
       case 'Alt':
         setIsAltHeld(true)
@@ -212,22 +214,32 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         }
         setHighlighted(h => (h - 1 + filtered.length) % filtered.length)
         e.preventDefault()
-        if (selectedRef.current)
-          selectedRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest',
-          })
+
+        if (el && parent) {
+          const elRect = el.getBoundingClientRect()
+          const parentRect = parent.getBoundingClientRect()
+
+          parent.scrollTop +=
+            elRect.top -
+            parentRect.top -
+            (parentRect.height / 2) +
+            (elRect.height / 2)
+        }
         break;
       case 'ArrowDown':
         setHighlighted(h => (h + 1 + filtered.length) % filtered.length)
         e.preventDefault()
-        if (selectedRef.current)
-          selectedRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest',
-          })
+
+        if (el && parent) {
+          const elRect = el.getBoundingClientRect()
+          const parentRect = parent.getBoundingClientRect()
+
+          parent.scrollTop +=
+            elRect.top -
+            parentRect.top -
+            (parentRect.height / 2) +
+            (elRect.height / 2)
+        }
         break;
       case 'ArrowLeft':
         if (searchMode == 'status') {
