@@ -33,67 +33,83 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
   const focusStyle: CSSProperties = { borderColor: 'var(--secondary-hover)' }
   const blurStyle: CSSProperties = { borderColor: 'var(--secondary)' }
 
-  const numInput = (key: keyof AnalysisSettings, fallback: number, extra?: React.InputHTMLAttributes<HTMLInputElement>) => (
-    <div
-      style={{
-        display: 'inline-flex',
-        borderRadius: 4,
-        overflow: 'hidden',
-        border: '2px solid var(--secondary)',
-      }}
-    >
-    <input
-      type="number"
-      value={num(key, fallback)}
-      readOnly={readOnly}
-      onChange={readOnly ? undefined : e => onChange(key, Number(e.target.value))}
-      onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
-      onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
-      style={{
-        width: '100%',
-        padding: '10px 14px',
-        borderRadius: '10px',
-        backgroundColor: 'var(--primary)',
-        color: 'var(--text)',
-        fontSize: '14px',
-        fontWeight: 600,
-        boxSizing: 'border-box',
-        outline: 'none',
-        transition: 'border-color 0.2s ease',
-        opacity: readOnly ? 0.75 : 1,
-        cursor: readOnly ? 'default' : undefined
-      }}
-      {...extra} />
-    <div
+  const numInput = (
+    keys: keyof AnalysisSettings | Array<keyof AnalysisSettings>,
+    fallback: number,
+    extra?: React.InputHTMLAttributes<HTMLInputElement>
+  ) => {
+    const keyList = Array.isArray(keys) ? keys : [keys]
+    const primaryKey = keyList[0]
+    const update = (v: string | number) => {
+      for (const key of keyList) {
+        onChange(key, Number(v))
+      }
+    }
+
+    return (
+      <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          fontSize: '13px',
-          paddingRight: '8px',
-          margin: 'none',
-          gap: '3px',
-          lineHeight: '1',
+          display: 'inline-flex',
+          borderRadius: 4,
+          overflow: 'hidden',
+          border: '2px solid var(--secondary)',
         }}
       >
-        <button
-          type="button"
-          onClick={() => onChange(key, Number(num(key, fallback)) + 1)}
-          style={{ cursor: 'pointer' }}
-        >
-          ▲
-        </button>
+        <input
+          type="number"
+          value={num(primaryKey, fallback)}
+          readOnly={readOnly}
+          onChange={readOnly ? undefined : e => update(e.target.value)}
+          onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
+          onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
+          style={{
+            height: '39px',
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--primary)',
+            color: 'var(--text)',
+            fontSize: '14px',
+            fontWeight: 600,
+            boxSizing: 'border-box',
+            outline: 'none',
+            transition: 'border-color 0.2s ease',
+            opacity: readOnly ? 0.75 : 1,
+            cursor: readOnly ? 'default' : undefined,
+          }}
+          {...extra}
+        />
 
-        <button
-          type="button"
-          onClick={() => onChange(key, Number(num(key, fallback)) - 1)}
-          style={{ cursor: 'pointer' }}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            fontSize: '13px',
+            paddingRight: '8px',
+            gap: '3px',
+            lineHeight: '1',
+          }}
         >
-          ▼
-        </button>
+          <button
+            type="button"
+            onClick={() => update(Number(num(primaryKey, fallback)) + 1)}
+            style={{ cursor: 'pointer', padding: 0, lineHeight: 1 }}
+          >
+            ▲
+          </button>
+
+          <button
+            type="button"
+            onClick={() => update(Number(num(primaryKey, fallback)) - 1)}
+            style={{ cursor: 'pointer', padding: 0, lineHeight: 1, paddingBottom: '2px' }}
+          >
+            ▼
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    );
+  };
 
   const selectStyle: CSSProperties = {
     ...inputStyle,
@@ -136,19 +152,7 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
             {numInput('rate_similarity', 50, { min: '0', max: '100' })}
           </PageField>
           <PageField label={t.settings_permutations}>
-            <input
-              type="number"
-              value={num('permutations_mantel_test', 999)}
-              readOnly={readOnly}
-              onChange={readOnly ? undefined : e => {
-                const v = Number(e.target.value)
-                onChange('permutations_mantel_test', v)
-                onChange('permutations_protest', v)
-              }}
-              onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
-              onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
-              style={{ ...inputStyle, opacity: readOnly ? 0.75 : 1, cursor: readOnly ? 'default' : undefined }}
-            />
+            {numInput(['permutations_mantel_test', 'permutations_protest'], 999)}
           </PageField>
         </PageGrid>
       </div>
