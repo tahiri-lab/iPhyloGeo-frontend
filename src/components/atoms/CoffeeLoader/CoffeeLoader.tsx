@@ -1,10 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
-import { validateEmail } from '../../../utils/validation'
-import ConfirmDialog from '../../molecules/ConfirmDialog/ConfirmDialog'
-import api from '../../../services/api'
-import EmailInput from '../../molecules/EmailInput/EmailInput'
+import EmailInput from '../../../components/molecules/EmailInput/EmailInput'
 
 function CoffeeMug() {
   return (
@@ -88,8 +85,7 @@ interface CoffeeLoaderProps {
   statusLabel?: string
   progress?: number
   onEmailSubmit?: (email: string) => void
-  emailSent?: boolean
-  resultId: string
+  emailSent?: boolean,
 }
 
 /**
@@ -104,33 +100,9 @@ export default function CoffeeLoader({
   progress,
   onEmailSubmit,
   emailSent = false,
-  resultId,
 }: CoffeeLoaderProps) {
   const { t } = useLang()
-  const cancelDialogRef = useRef<HTMLDialogElement>(null)
   const [email, setEmail] = useState('')
-  const [emailErr, setEmailErr] = useState('')
-  const [canCancel, setCanCancel] = useState(true)
-
-  const handleCancel = async () => {
-    const success = await api.jobs.cancel(resultId)
-    if (!success) {
-      // TODO replace with toast
-      alert("Failed to cancel task")
-    }
-    else {
-      setCanCancel(false)
-    }
-  }
-
-  const handleSubmit = () => {
-    if (!email || !validateEmail(email)) {
-      setEmailErr('Please enter a valid email.')
-      return
-    }
-    setEmailErr('')
-    onEmailSubmit?.(email)
-  }
 
   return (
     <div
@@ -178,34 +150,6 @@ export default function CoffeeLoader({
             <ProgressBar visible progress={progress} />
           </div>
         )}
-
-        {canCancel && <button
-          onClick={() => { cancelDialogRef.current!.showModal() }}
-          style={{
-            color: 'var(--primary)',
-            backgroundColor: 'var(--error)',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '5px 20px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--error-hover)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--error)')}
-        >
-          {t.btn_cancel}
-        </button>}
-        <ConfirmDialog
-          message={t.cancel_confirm_message}
-          yesLabel={t.cancel_confirm_yes}
-          noLabel={t.cancel_confirm_no}
-          execute={handleCancel}
-          ref={cancelDialogRef}
-        />
 
         {/* Divider */}
         {onEmailSubmit && (

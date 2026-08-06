@@ -213,9 +213,9 @@ export default function PhyloTree({ newick, name, darkMode: darkModeProp }: Phyl
       >
         {/* Zoom controls */}
         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
-          <button style={zoomBtnStyle} onClick={() => setZoom(z => Math.min(z * 1.3, 5))}>+</button>
-          <button style={zoomBtnStyle} onClick={() => setZoom(z => Math.max(z / 1.3, 0.2))}>−</button>
-          <button style={zoomBtnStyle} onClick={() => setZoom(1)}>↺</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_in} onClick={() => setZoom(z => Math.min(z * 1.3, 5))}>+</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_out} onClick={() => setZoom(z => Math.max(z / 1.3, 0.2))}>−</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_reset} onClick={() => setZoom(1)}>↺</button>
         </div>
 
         {/* Scrollable + zoomable tree */}
