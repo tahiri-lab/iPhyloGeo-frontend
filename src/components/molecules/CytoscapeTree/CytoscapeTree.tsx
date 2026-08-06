@@ -1,5 +1,4 @@
 import { useEffect, useRef, useMemo } from 'react'
-import { useLang } from '../../../context/LanguageContext'
 import cytoscape from 'cytoscape'
 import svg from 'cytoscape-svg';
 import { parseNewick, type TreeNode } from '../../../utils/newickParser'
@@ -175,7 +174,6 @@ export function TreeGraph({
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
-  const { t } = useLang()
 
   const baseElements = useMemo(() => {
     try { return buildCytoElements(parseNewick(newick)) }
@@ -252,9 +250,9 @@ export function TreeGraph({
           }}
         />
         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
-          <button style={zoomBtnStyle} aria-label={t.tree_zoom_in} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() * 1.3), renderedPosition: { x: 200, y: 200 } })}>+</button>
-          <button style={zoomBtnStyle} aria-label={t.tree_zoom_out} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() / 1.3), renderedPosition: { x: 200, y: 200 } })}>−</button>
-          <button style={zoomBtnStyle} aria-label={t.tree_zoom_reset} onClick={() => cyRef.current?.fit(undefined, 30)}>↺</button>
+          <button style={zoomBtnStyle} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() * 1.3), renderedPosition: { x: 200, y: 200 } })}>+</button>
+          <button style={zoomBtnStyle} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() / 1.3), renderedPosition: { x: 200, y: 200 } })}>−</button>
+          <button style={zoomBtnStyle} onClick={() => cyRef.current?.fit(undefined, 30)}>↺</button>
         </div>
       </div>
     </div>

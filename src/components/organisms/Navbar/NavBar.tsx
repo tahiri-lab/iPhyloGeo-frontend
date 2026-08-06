@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useLang, type Lang, type Translations } from '../../../context/LanguageContext'
 import { prefetchLikelyRoutes, prefetchRoute } from '../../../router'
-import { focusElement } from '@testing-library/user-event/dist/cjs/event/focus.js'
 
 const NAV_ITEMS: { path: string; labelKey: keyof Translations; icon: React.ReactNode }[] = [
   {
@@ -181,8 +180,7 @@ export default function NavBar() {
         transition: 'width 0.3s ease-in-out',
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
-        overflowX: 'hidden',
+        overflow: 'hidden',
       }}
     >
       {/* Header */}
@@ -200,8 +198,7 @@ export default function NavBar() {
               alignItems: 'center',
               flexShrink: 0,
             }}
-            aria-label= {minimized ? t.nav_toggle_open : t.nav_toggle_close}
-            aria-expanded={!minimized}
+            aria-label="Toggle sidebar"
           >
             <BurgerIcon />
           </button>
@@ -239,7 +236,6 @@ export default function NavBar() {
           const isActive = location.pathname === item.path
           return (
             <NavLink
-              aria-label={t[item.labelKey]}
               key={item.path}
               to={item.path}
               style={{ textDecoration: 'none' }}
@@ -332,13 +328,7 @@ export default function NavBar() {
             <div style={{ position: 'relative' }}>
               {/* Trigger */}
               <button
-                aria-haspopup="listbox"
-                aria-expanded={open}
-                aria-label={t.nav_language}
-                onClick={() => {
-                  setOpen(o => !o)
-                  document.getElementById("languageDropdown")?.focus()
-                }}
+                onClick={() => setOpen(o => !o)}
                 style={{
                   width: '100%',
                   padding: '6px 10px',
@@ -359,10 +349,6 @@ export default function NavBar() {
               {/* Dropdown */}
               {open && (
                 <div
-                  id="languageDropdown"
-                  role="listbox"
-                  tabIndex={-1}
-                  aria-label={t.nav_language}
                   style={{
                     position: 'absolute',
                     left: 0,
@@ -377,10 +363,7 @@ export default function NavBar() {
                   }}
                 >
                   {LANGS.map(l => (
-                    <button
-                      role="option"
-                      tabIndex={0}
-                      aria-selected={l === lang}
+                    <div
                       key={l}
                       onClick={() => {
                         setLang(l)
@@ -398,7 +381,7 @@ export default function NavBar() {
                       }}
                     >
                       {l}
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
