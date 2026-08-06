@@ -120,6 +120,11 @@ export const jobs = {
   /** Poll the status + progress of a running job. */
   status: (resultId: string) =>
     request<JobStatus>(`/api/jobs/${resultId}/status`),
+
+  cancel: (resultId: string) =>
+    request<JobStatus>(`/api/jobs/${resultId}/cancel`, {
+      method: "DELETE",
+    }),
 };
 
 // ── Results ───────────────────────────────────────────────────────────────────

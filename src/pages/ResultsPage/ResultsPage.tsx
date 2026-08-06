@@ -16,6 +16,7 @@ import api, { type AnalysisResult, type AnalysisSettings } from '../../services/
 import { useLang } from '../../context/LanguageContext'
 import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 import { validateSettings } from '../../utils/validationParamsSettings'
+import ConfirmDialog from '../../components/molecules/ConfirmDialog/ConfirmDialog'
 import { usePresets } from '../../context/PresetContext'
 import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
 
@@ -204,6 +205,7 @@ function ActionsMenu({
 }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const deleteDialogRef = useRef<HTMLDialogElement>(null)
   const { t } = useLang()
 
   useEffect(() => {
@@ -237,6 +239,13 @@ function ActionsMenu({
 
   return (
     <div ref={menuRef} style={{ position: 'relative' }}>
+      <ConfirmDialog
+        message={t.results_delete_confirm_message}
+        yesLabel={t.results_delete_confirm_yes}
+        noLabel={t.results_delete_confirm_no}
+        execute={onDelete}
+        ref={deleteDialogRef}
+      />
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -274,7 +283,7 @@ function ActionsMenu({
             {t.results_edit_config}
           </button>
           <div style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
-          <button style={deleteItemStyle} onClick={() => { onDelete(); setOpen(false) }}>
+          <button style={deleteItemStyle} onClick={() => { deleteDialogRef.current!.showModal(); setOpen(false) }}>
             {t.results_delete}
           </button>
         </div>

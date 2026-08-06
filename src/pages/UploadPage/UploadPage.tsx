@@ -111,8 +111,9 @@ export default function UploadPage() {
   const [uploadingClimatic, setUploadingClimatic] = useState(false)
   const [uploadingGenetic, setUploadingGenetic] = useState(false)
   const [running, setRunning] = useState(false)
+  const [disableCreation, setDisableCreation] = useState(false);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [, setResultId] = useState<string | null>(null)
+  const [resultId, setResultId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
@@ -168,7 +169,7 @@ export default function UploadPage() {
 
 
   const uploading = uploadingClimatic || uploadingGenetic
-  const canRun = !!climaticId && !!geneticId && !running && !uploading && !nameTaken && !!analysisName
+  const canRun = !!climaticId && !!geneticId && !running && !uploading && !nameTaken && !!analysisName && !disableCreation
 
   const statusLabel = (status: string) => {
     const map: Record<string, string> = {
@@ -225,7 +226,7 @@ export default function UploadPage() {
 
   const handleRun = async () => {
     if (!climaticId || !geneticId) return
-    setRunning(true)
+    setDisableCreation(true)
     setError(null)
     setJobStatus(null)
     setResultId(null)
@@ -239,6 +240,7 @@ export default function UploadPage() {
         settings: localSettings,
       })
       setResultId(result_id)
+      setRunning(true)
 
       const poll = async () => {
         try {
@@ -252,18 +254,21 @@ export default function UploadPage() {
           } else if (status.status === 'error') {
             setError(status.error ?? 'Pipeline failed')
             setRunning(false)
+            setDisableCreation(false)
           } else {
             setTimeout(poll, 2000)
           }
         } catch (e) {
           setError(`Status check failed: ${e instanceof Error ? e.message : String(e)}`)
           setRunning(false)
+          setDisableCreation(false)
         }
       }
       poll()
     } catch (e) {
       setError(`Failed to start job: ${e instanceof Error ? e.message : String(e)}`)
       setRunning(false)
+      setDisableCreation(false)
     }
   }
 
@@ -280,6 +285,7 @@ export default function UploadPage() {
           progress={jobStatus?.progress}
           onEmailSubmit={handleEmailSubmit}
           emailSent={emailSent}
+          resultId={resultId}
         />
       )}
 
