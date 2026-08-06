@@ -221,6 +221,7 @@ export default function ComparePage() {
   const [resultA, setResultA] = useState<AnalysisResult | null>(null)
   const [resultB, setResultB] = useState<AnalysisResult | null>(null)
   const [layout, setLayout] = useState<LayoutType>('top-down')
+  const [trigger, setTrigger] = useState(0)
   const { t } = useLang()
   const { theme } = useTheme()
   const darkMode = theme === 'dark'
@@ -296,6 +297,7 @@ export default function ComparePage() {
                           options={selectorOptions.filter(o => o.id !== resultB?._id)}
                           value={resultA?._id ?? null}
                           onSelect={id => { if (id) selectSide(id, 'A') }}
+                          triggerSend={() => setTrigger(t => t + 1)}
                         />
                       )}
                   </>
@@ -310,6 +312,7 @@ export default function ComparePage() {
                           options={selectorOptions.filter(o => o.id !== resultA?._id)}
                           value={resultB?._id ?? null}
                           onSelect={id => { if (id) selectSide(id, 'B') }}
+                          trigger={trigger}
                         />
                       )}
                   </>
