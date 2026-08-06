@@ -4,6 +4,7 @@ import ProgressBar from '../ProgressBar/ProgressBar'
 import { validateEmail } from '../../../utils/validation'
 import ConfirmDialog from '../../molecules/ConfirmDialog/ConfirmDialog'
 import api from '../../../services/api'
+import EmailInput from '../../molecules/EmailInput/EmailInput'
 
 function CoffeeMug() {
   return (
@@ -109,12 +110,16 @@ export default function CoffeeLoader({
   const cancelDialogRef = useRef<HTMLDialogElement>(null)
   const [email, setEmail] = useState('')
   const [emailErr, setEmailErr] = useState('')
+  const [canCancel, setCanCancel] = useState(true)
 
   const handleCancel = async () => {
     const success = await api.jobs.cancel(resultId)
     if (!success) {
       // TODO replace with toast
       alert("Failed to cancel task")
+    }
+    else {
+      setCanCancel(false)
     }
   }
 
@@ -174,7 +179,7 @@ export default function CoffeeLoader({
           </div>
         )}
 
-        <button
+         {canCancel && <button
           onClick={() => { cancelDialogRef.current!.showModal() }}
           style={{
             color: 'var(--primary)',
@@ -193,7 +198,7 @@ export default function CoffeeLoader({
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--error)')}
         >
           {t.btn_cancel}
-        </button>
+        </button>}
         <ConfirmDialog
           message={t.cancel_confirm_message}
           yesLabel={t.cancel_confirm_yes}
