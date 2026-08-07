@@ -188,7 +188,7 @@ export const jobs = {
     request<JobStatus>(`/api/jobs/${resultId}/status`, {
       timeoutMs: 5000,  // Short timeout for polling
       skipRetry: true,  // Fail immediately on connection loss
-    request<JobStatus>(`/api/jobs/${resultId}/status`),
+    }),
 
   cancel: (resultId: string) =>
     request<JobStatus>(`/api/jobs/${resultId}/cancel`, {
