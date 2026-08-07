@@ -1,12 +1,19 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ThemeProvider } from '../../context/ThemeContext'
 import { LanguageProvider } from '../../context/LanguageContext'
 import HomePage from '../../pages/HomePage/HomePage'
 
 vi.mock('../../assets/videos/indexPhylogeo.mp4', () => ({ default: 'dark.mp4' }))
-vi.mock('../../assets/videos/indexPhylogeo_light.mp4', () => ({ default: 'light.mp4' }))
+
+// Mock default dark theme in browser
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: query === '(prefers-color-scheme: dark)',
+  }),
+});
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -37,9 +44,16 @@ describe('HomePage', () => {
     expect(githubLinks[0]).toHaveAttribute('target', '_blank')
   })
 
-  it('renders a video background element', () => {
+  it('renders a video background element', async () => {
     const { container } = render(<HomePage />, { wrapper: Wrapper })
-    expect(container.querySelector('video')).not.toBeNull()
+    const video = await waitFor(() =>
+      container.getElementsByTagName('video')
+    )
+    expect(video[0]).toBeInTheDocument()
+    expect(video[0].querySelector('source')).toHaveAttribute(
+      'src',
+      '/src/assets/videos/indexPhylogeo.mp4'
+    )
   })
 
   it('renders the phylogeographic description text', () => {
