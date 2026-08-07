@@ -7,6 +7,11 @@
 
 const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
+// Configuration of fetch timeouts and retry behavior. These can be adjusted as needed.
+const REQUEST_TIMEOUT_MS = 10000;
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 500;
+
 // ── Local result store (Safari-safe alternative to cross-origin cookies) ──────
 
 const RESULT_IDS_KEY = "iphylogeo_result_ids";
@@ -26,10 +31,66 @@ function addStoredId(id: string): void {
   }
 }
 
-// ── Internal helper ───────────────────────────────────────────────────────────
+// ── Internal helpers ───────────────────────────────────────────────────────────
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { credentials: "include", ...init });
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export interface RequestOptions extends RequestInit {
+  timeoutMs?: number;
+  skipRetry?: boolean;
+}
+
+async function fetchWithTimeoutAndRetry(url: string, options?: RequestOptions): Promise<Response> {
+  const { timeoutMs = REQUEST_TIMEOUT_MS, skipRetry = false, ...init } = options ?? {};
+  let attempt = 0;
+
+  while (true) {
+    attempt++;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.warn(`[API] Timeout déclenché après ${timeoutMs}ms`);
+      controller.abort();
+    }, timeoutMs);
+
+    if (init.signal) {
+      init.signal.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+
+    try {
+      const res = await fetch(url, {
+        credentials: "include",
+        cache: "no-store", // Prevent caching to avoid stale data, especially for status polling
+        ...init,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (res.status >= 500 && !skipRetry && attempt <= MAX_RETRIES) {
+        await delay(INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1));
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      clearTimeout(timeoutId);
+
+      if (!skipRetry && attempt <= MAX_RETRIES) {
+        await delay(INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1));
+        continue;
+      }
+
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error(`Request timed out after ${timeoutMs / 1000} seconds`, { cause: err });
+      }
+
+      throw err;
+    }
+  }
+}
+
+async function request<T>(path: string, options?: RequestOptions): Promise<T> {
+  const res = await fetchWithTimeoutAndRetry(`${BASE}${path}`, options);
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error((body as { detail?: string }).detail ?? `HTTP ${res.status}`);
@@ -86,7 +147,12 @@ export interface AnalysisResult {
 function uploadFile(path: string, file: File): Promise<UploadResult> {
   const form = new FormData();
   form.append("file", file);
-  return request<UploadResult>(path, { method: "POST", body: form });
+  return request<UploadResult>(path, {
+    method: "POST",
+    body: form,
+    timeoutMs: 60000, // Timeout is longer for file uploads (60s) to accommodate larger files
+    skipRetry: true,
+  });
 }
 
 export const upload = {
@@ -119,6 +185,9 @@ export const jobs = {
 
   /** Poll the status + progress of a running job. */
   status: (resultId: string) =>
+    request<JobStatus>(`/api/jobs/${resultId}/status`, {
+      timeoutMs: 5000,  // Short timeout for polling
+      skipRetry: true,  // Fail immediately on connection loss
     request<JobStatus>(`/api/jobs/${resultId}/status`),
 
   cancel: (resultId: string) =>
@@ -166,7 +235,9 @@ export const results = {
 
   /** Download result as an Excel file. Returns a Blob. */
   download: async (id: string): Promise<Blob> => {
-    const res = await fetch(`${BASE}/api/results/${id}/download`, { credentials: "include" });
+    const res = await fetchWithTimeoutAndRetry(`${BASE}/api/results/${id}/download`, {
+      timeoutMs: 60000,
+    });
     if (!res.ok) throw new Error(`Download failed: HTTP ${res.status}`);
     return res.blob();
   },
@@ -230,7 +301,7 @@ export const settings = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
-    reset: () =>
+  reset: () =>
     request<AnalysisSettings>("/api/settings/reset", {
       method: "POST",
     }),

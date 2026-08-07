@@ -175,6 +175,9 @@ export interface Translations {
   error_bootstrap_threshold: string
   error_dist_threshold: string
   error_correlation_threshold: string
+  // CoffeeLoader
+  server_connection_lost: string
+  loading_time_notice: string
   //Preset
   preset_select: string
   preset_name: string
@@ -224,7 +227,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filter by name…",
     results_searchFilterByStatusComplete: "Complete",
     results_searchFilterByStatusPending: "Pending",
-    results_searchFilterByStatusFailed: "Failed",
+    results_searchFilterByStatusFailed: "Error",
     results_searchFilterByStatusAll: "All statuses",
     results_searchFilterModeName: "Name",
     results_searchFilterModeStatus: "Status",
@@ -350,6 +353,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Bootstrap threshold must be a non-negative number (>= 0).",
     error_dist_threshold: "Distance threshold must be a non-negative number (>= 0).",
     error_correlation_threshold: "Correlation threshold must be between 0 and 1.",
+    server_connection_lost: "Connection to server lost...",
+    loading_time_notice: "This may take a few minutes…",
     preset_select: 'Select Preset',
     preset_name: 'Preset name',
   },
@@ -391,7 +396,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filtrer par nom…",
     results_searchFilterByStatusComplete: "Complété",
     results_searchFilterByStatusPending: "En attente",
-    results_searchFilterByStatusFailed: "Échoué",
+    results_searchFilterByStatusFailed: "Erreur",
     results_searchFilterByStatusAll: "Tous les statuts",
     results_searchFilterModeName: "Nom",
     results_searchFilterModeStatus: "Statut",
@@ -517,6 +522,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Le seuil de bootstrap doit être un nombre positif ou nul (>= 0).",
     error_dist_threshold: "Le seuil de distance doit être un nombre positif ou nul (>= 0).",
     error_correlation_threshold: "Le seuil de corrélation doit être compris entre 0 et 1.",
+    server_connection_lost: "Connexion au serveur interrompue...",
+    loading_time_notice: "Cela peut prendre quelques minutes…",
     preset_select: 'Choisir un préréglage',
     preset_name: 'Nom du préréglage',
   },
@@ -558,6 +565,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filtrar por nombre…",
     results_searchFilterByStatusComplete: "Completado",
     results_searchFilterByStatusPending: "Pendiente",
+    results_searchFilterByStatusFailed: "Error",  
     results_searchFilterByStatusFailed: "Fallido",
     results_searchFilterByStatusAll: "Todos los estados",
     results_searchFilterModeName: "Nombre",
@@ -684,6 +692,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "El umbral de bootstrap debe ser un número no negativo (>= 0).",
     error_dist_threshold: "El umbral de distancia debe ser un número no negativo (>= 0).",
     error_correlation_threshold: "El umbral de correlación debe estar entre 0 y 1.",
+    server_connection_lost: "Conexión con el servidor interrumpida...",
+    loading_time_notice: "Esto puede tomar unos minutos…",
     preset_select: 'Seleccionar preajuste',
     preset_name: 'Nombre del preajuste',
   },
