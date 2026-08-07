@@ -1,8 +1,14 @@
 import { useEffect, useRef, useMemo } from 'react'
+import { useLang } from '../../../context/LanguageContext'
 import cytoscape from 'cytoscape'
+import svg from 'cytoscape-svg';
 import { parseNewick, type TreeNode } from '../../../utils/newickParser'
+import { triggerDownload } from '../../../utils/svgExport'
 import { type LayoutType, getLayoutConfig } from '../../../constants/layoutConfig'
 import { zoomBtnStyle } from '../../../styles/commonStyles'
+import DownloadButton from '../../atoms/DownloadButton/DownloadButton'
+
+cytoscape.use(svg)
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -169,6 +175,7 @@ export function TreeGraph({
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
+  const { t } = useLang()
 
   const baseElements = useMemo(() => {
     try { return buildCytoElements(parseNewick(newick)) }
@@ -184,27 +191,55 @@ export function TreeGraph({
           : el)
       : baseElements
 
+    const layoutOptions = getLayoutConfig(layout)
+
     cyRef.current?.destroy()
     cyRef.current = cytoscape({
       container: containerRef.current,
       elements: elements as cytoscape.ElementDefinition[],
       style: getCytoscapeStylesheet(darkMode, layout) as cytoscape.StylesheetJson,
-      layout: getLayoutConfig(layout),
+      layout: layoutOptions,
       userZoomingEnabled: true,
       userPanningEnabled: true,
       minZoom: 0.1,
       maxZoom: 5,
     })
 
+    let timeout: number;
+    const handler = () => {
+      clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        const cy = cyRef.current;
+        cy.resize();
+        cy.fit(undefined, layoutOptions.padding);
+      }, 22);
+    };
+    window.addEventListener("resize", handler)
+
     return () => {
+      window.removeEventListener("resize", handler)
       cyRef.current?.destroy()
       cyRef.current = null
     }
   }, [baseElements, layout, darkMode])
 
+  function handleDownloadSVG() {
+    if (!cyRef.current) return;
+
+    const svg = cyRef.current.svg({
+      full: true,
+      scale: 1,
+    });
+
+    triggerDownload(svg, `${name}.svg`)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{name}</h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{name}</h3>
+        <DownloadButton onClick={handleDownloadSVG} />
+      </div>
       <div style={{ position: 'relative' }}>
         <div
           ref={containerRef}
@@ -217,9 +252,9 @@ export function TreeGraph({
           }}
         />
         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
-          <button style={zoomBtnStyle} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() * 1.3), renderedPosition: { x: 200, y: 200 } })}>+</button>
-          <button style={zoomBtnStyle} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() / 1.3), renderedPosition: { x: 200, y: 200 } })}>−</button>
-          <button style={zoomBtnStyle} onClick={() => cyRef.current?.fit(undefined, 30)}>↺</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_in} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() * 1.3), renderedPosition: { x: 200, y: 200 } })}>+</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_out} onClick={() => cyRef.current?.zoom({ level: (cyRef.current.zoom() / 1.3), renderedPosition: { x: 200, y: 200 } })}>−</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_reset} onClick={() => cyRef.current?.fit(undefined, 30)}>↺</button>
         </div>
       </div>
     </div>

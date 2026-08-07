@@ -4,9 +4,9 @@ import { useTheme } from '../../../context/ThemeContext'
 import { parseNewick, type TreeNode } from '../../../utils/newickParser'
 import { downloadSvgElement } from '../../../utils/svgExport'
 import { zoomBtnStyle } from '../../../styles/commonStyles'
+import DownloadButton from '../DownloadButton/DownloadButton'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
 interface LayoutNode {
   node: TreeNode
   x: number
@@ -199,24 +199,7 @@ export default function PhyloTree({ newick, name, darkMode: darkModeProp }: Phyl
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{name}</h3>
-        <button
-          onClick={handleDownloadSVG}
-          title={t.tree_download}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '4px 10px', borderRadius: 7,
-            border: '1px solid var(--border)',
-            background: 'transparent', color: 'var(--text-secondary)',
-            fontSize: 11, cursor: 'pointer',
-          }}
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          {t.tree_download}
-        </button>
+        <DownloadButton onClick={handleDownloadSVG} />
       </div>
       <div
         style={{
@@ -230,9 +213,9 @@ export default function PhyloTree({ newick, name, darkMode: darkModeProp }: Phyl
       >
         {/* Zoom controls */}
         <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
-          <button style={zoomBtnStyle} onClick={() => setZoom(z => Math.min(z * 1.3, 5))}>+</button>
-          <button style={zoomBtnStyle} onClick={() => setZoom(z => Math.max(z / 1.3, 0.2))}>−</button>
-          <button style={zoomBtnStyle} onClick={() => setZoom(1)}>↺</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_in} onClick={() => setZoom(z => Math.min(z * 1.3, 5))}>+</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_out} onClick={() => setZoom(z => Math.max(z / 1.3, 0.2))}>−</button>
+          <button style={zoomBtnStyle} aria-label={t.tree_zoom_reset} onClick={() => setZoom(1)}>↺</button>
         </div>
 
         {/* Scrollable + zoomable tree */}

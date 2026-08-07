@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as HoverCard from '@radix-ui/react-hover-card'
 import { useLang } from '../../../context/LanguageContext'
 
@@ -20,9 +20,12 @@ interface SearchBarProps {
   value: string | null
   onSelect: (id: string) => void
   placeholder?: string
+  trigger?: number
+  triggerSend?: () => void
 }
 
 type SearchMode = 'name' | 'status' | 'date'
+const searchModes: SearchMode[] = ['name', 'status', 'date']
 
 const searchIcon = (
   <svg width="14" height="14" viewBox="0 0 192.904 192.904" style={{ fill: 'var(--text-secondary)', flexShrink: 0 }} aria-hidden="true">
@@ -30,6 +33,8 @@ const searchIcon = (
   </svg>
 )
 
+const shortcuts = Array.from({ length: 10 }, (_, i) => String(i))
+  .concat(Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)))
 const chevronIcon = (open: boolean) => (
   <svg
     width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -50,36 +55,51 @@ const chevronIcon = (open: boolean) => (
  * for its unused fields if reusing `SettingsView` there, since it has no
  * default props.
  */
-export default function SearchBar({ options, value, onSelect, placeholder = 'Select a result…' }: SearchBarProps) {
+export default function SearchBar({ options, value, onSelect, placeholder = 'Select a result…', triggerSend, trigger }: SearchBarProps) {
   const [open, setOpen] = useState(false)
   const [searchMode, setSearchMode] = useState<SearchMode>('name')
   const [query, setQuery] = useState('')
   const { t } = useLang()
 
+  const [isAltHeld, setIsAltHeld] = useState(false)
+  const [isControlHeld, setIsControlHeld] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [highlighted, setHighlighted] = useState(0)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const statusRef = useRef<HTMLSelectElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null)
+  const selectedRef = useRef<HTMLElement>(null)
 
   const selected = options.find(o => o.id === value) ?? null
+  const filtered = useMemo(() => {
+    return options.filter(o => {
+      // Filter options based on the selected search mode
+      if (!query.trim()) return true
 
-  // Filter options based on the selected search mode
-  const filtered = options.filter(o => {
-    if (!query.trim()) return true
+      if (searchMode === 'name') {
+        return o.label.toLowerCase().includes(query.toLowerCase())
+      }
 
-    if (searchMode === 'name') {
-      return o.label.toLowerCase().includes(query.toLowerCase())
-    }
+      if (searchMode === 'status') {
+        return o.badge?.toLowerCase() === query.toLowerCase()
+      }
 
-    if (searchMode === 'status') {
-      return o.badge?.toLowerCase() === query.toLowerCase()
-    }
+      if (searchMode === 'date') {
+        // Basic check to see if the sublabel or date contains the input value (YYYY-MM-DD)
+        return o.sublabel ? o.sublabel.includes(query) : false
+      }
 
-    if (searchMode === 'date') {
-      // Basic check to see if the sublabel or date contains the input value (YYYY-MM-DD)
-      return o.sublabel ? o.sublabel.includes(query) : false
-    }
+      return true
+    })
+  }, [query])
 
-    return true
-  })
+  // The array reference always changes when filtered is recomputed so we need a stable way to compare
+  const filteredIds = filtered.map(x => x.id).join(",")
+  useEffect(() => {
+    setHighlighted(selected ? filtered.findIndex(o => o.id === selected.id) : -1)
+  }, [filteredIds, selected])
 
   useEffect(() => {
     function onOutsideClick(e: MouseEvent) {
@@ -93,21 +113,172 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
   }, [])
 
   useEffect(() => {
-    if (open && searchMode === 'name') {
-      setTimeout(() => inputRef.current?.focus(), 0)
+    if (!open) return
+    switch (searchMode) {
+      case 'name':
+        setTimeout(() => inputRef.current?.focus(), 0)
+        break;
+      case 'date':
+        setTimeout(() => dateRef.current?.focus(), 0)
+        break;
+      case 'status':
+        setTimeout(() => statusRef.current?.focus(), 0)
+        break;
     }
   }, [open, searchMode])
 
-  function handleKey(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') { setOpen(false); setQuery('') }
+  useEffect(() => {
+    if (trigger !== undefined && trigger !== 0) setOpen(true)
+  }, [trigger])
+
+  // Hijack all alphanumeric keypresses on the page to open the search bar
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (open) return
+
+      if (e.key == 'Escape') {
+        setOpen(true)
+      }
+
+      if (/^[a-zA-Z0-9]$/.test(e.key)) {
+        setSearchMode('name')
+        setQuery(e.key)
+        setOpen(true)
+        e.preventDefault()
+      }
+    }
+
+    if (trigger === undefined) {
+      window.addEventListener("keydown", handler)
+      return () => {
+        window.removeEventListener("keydown", handler)
+      }
+    }
+  }, [open])
+
+  useEffect(() => {
+    const show = isAltHeld && isControlHeld;
+    setShowShortcuts(show)
+  }, [isControlHeld, isAltHeld])
+
+  function handleKeyUp(e: React.KeyboardEvent) {
+    switch (e.key) {
+      case 'Alt':
+        setIsAltHeld(false)
+        break;
+      case 'Control':
+        setIsControlHeld(false)
+        break;
+    }
+  }
+
+  function reset() {
+    setQuery('')
+    setOpen(false)
+    setShowShortcuts(false)
+    setIsControlHeld(false)
+    setIsAltHeld(false)
+    setSearchMode('name')
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (isAltHeld && isControlHeld && /^[a-z0-9]$/.test(e.key)) {
+      const jumpTo = filtered.at(shortcuts.indexOf(e.key))
+      if (jumpTo) {
+        onSelect(jumpTo.id)
+        reset()
+        e.preventDefault()
+        e.stopPropagation()
+        if (triggerSend !== undefined) triggerSend()
+      }
+    }
+
+    const status = statusRef.current!;
+    const el = selectedRef.current
+    const parent = el?.parentElement
+    switch (e.key) {
+      case 'Alt':
+        setIsAltHeld(true)
+        break;
+      case 'Control':
+        setIsControlHeld(true)
+        break;
+      case 'Escape':
+        setOpen(false)
+        e.stopPropagation()
+        break;
+      case 'ArrowUp':
+        if (highlighted == -1) {
+          setHighlighted(filtered.length - 1)
+          return;
+        }
+        setHighlighted(h => (h - 1 + filtered.length) % filtered.length)
+        e.preventDefault()
+
+        if (el && parent) {
+          const elRect = el.getBoundingClientRect()
+          const parentRect = parent.getBoundingClientRect()
+
+          parent.scrollTop +=
+            elRect.top -
+            parentRect.top -
+            (parentRect.height / 2) +
+            (elRect.height / 2)
+        }
+        break;
+      case 'ArrowDown':
+        setHighlighted(h => (h + 1 + filtered.length) % filtered.length)
+        e.preventDefault()
+
+        if (el && parent) {
+          const elRect = el.getBoundingClientRect()
+          const parentRect = parent.getBoundingClientRect()
+
+          parent.scrollTop +=
+            elRect.top -
+            parentRect.top -
+            (parentRect.height / 2) +
+            (elRect.height / 2)
+        }
+        break;
+      case 'ArrowLeft':
+        if (searchMode == 'status') {
+          status.selectedIndex = (status.selectedIndex - 1 + status.options.length)
+            % status.options.length
+          status.dispatchEvent(new Event("change", { bubbles: true }));
+          e.preventDefault()
+        }
+        break;
+      case 'ArrowRight':
+        if (searchMode == 'status') {
+          status.selectedIndex = (status.selectedIndex + 1) % status.options.length,
+          status.dispatchEvent(new Event("change", { bubbles: true }));
+          e.preventDefault()
+        }
+        break;
+      case 'Tab':
+        const currModeIdx = searchModes.indexOf(searchMode)
+        setQuery('')
+        setSearchMode(searchModes[(currModeIdx + 1) % searchModes.length])
+        break;
+      case 'Enter':
+        if (highlighted >= 0) {
+          onSelect(filtered[highlighted].id)
+          reset()
+          if (triggerSend !== undefined) triggerSend()
+        }
+        break;
+    }
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }} onKeyDown={handleKey}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }} onKeyDown={handleKeyDown} onKeyUp={handleKeyUp}>
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={() => {
+          setOpen(v => !v)
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
         style={{
@@ -126,7 +297,6 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
       >
         {searchIcon}
         <span style={{
-          flex: 1,
           fontSize: '14px',
           fontWeight: selected ? 600 : 400,
           color: selected ? 'var(--text)' : 'var(--text-secondary)',
@@ -136,6 +306,24 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
         }}>
           {selected ? selected.label : placeholder}
         </span>
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center' }} >
+          {selected?.hover && <span style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            padding: '1px 6px',
+            borderRadius: '20px',
+            backgroundColor: 'var(--action)',
+            color: 'var(--primary)',
+            border: '1px solid var(--border)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em',
+            whiteSpace: 'nowrap',
+            marginLeft: '2px',
+          }}
+          >
+            {selected.hover.text}
+          </span>}
+        </div>
         {selected?.sublabel && (
           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {selected.sublabel}
@@ -193,7 +381,9 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                 <input
                   ref={inputRef}
                   value={query}
-                  onChange={e => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setQuery(e.target.value)
+                  }}
                   placeholder={t.results_searchFilterByNamePlaceholder}
                   style={{
                     width: '100%',
@@ -212,6 +402,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
               {searchMode === 'status' && (
                 <select
                   value={query}
+                  ref={statusRef}
                   onChange={e => setQuery(e.target.value)}
                   style={{
                     width: '100%',
@@ -237,6 +428,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                 <input
                   type="date"
                   value={query}
+                  ref={dateRef}
                   onChange={e => setQuery(e.target.value)}
                   onClick={e => {
                     // Open native date picker when clicking anywhere in the input
@@ -270,14 +462,18 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                 No results found
               </div>
             ) : (
-              filtered.map(opt => {
-                const isSelected = opt.id === value
+              filtered.map((opt, i) => {
+                const isSelected = i == highlighted
                 return (
                   <div
                     key={opt.id}
                     role="option"
                     aria-selected={isSelected}
-                    onClick={() => { onSelect(opt.id); setOpen(false); setQuery('') }}
+                    ref={isSelected ? selectedRef : undefined}
+                    onClick={() => {
+                      onSelect(opt.id)
+                      reset()
+                    }}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -296,57 +492,73 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
                       (e.currentTarget as HTMLDivElement).style.backgroundColor = isSelected ? 'var(--action-soft-bg)' : 'transparent'
                     }}
                   >
-                    <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{opt.label}</span>
-                      {opt.hover && (
-                        <HoverCard.Root>
-                          <HoverCard.Trigger asChild>
-                            <span style={{
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              padding: '2px 8px',
-                              borderRadius: '20px',
-                              backgroundColor: 'var(--action)',
-                              color: 'var(--primary)',
-                              border: '1px solid var(--border)',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.03em',
-                              whiteSpace: 'nowrap',
-                              flexShrink: 0,
-                              marginLeft: '10px',
-                            }}
-                            >
-                              {opt.hover.text}
-                            </span>
-                          </HoverCard.Trigger>
-                          <HoverCard.Portal>
-                            <HoverCard.Content
-                              side="right"
-                              sideOffset={5}
-                              style={{
-                                background: 'var(--primary)',
+                    <div style={{
+                      display: 'flex',
+                      gap: 20,
+                      alignItems: 'center',
+                    }}>
+                    {showShortcuts && <div style={{
+                      fontSize: '14px',
+                      textAlign: 'center',
+                      backgroundColor: 'var(--secondary)',
+                      borderRadius: '100%',
+                      border: '1px solid var(--action)',
+                      width: '24px'
+                    }}>
+                      {shortcuts[i]}
+                    </div>}
+                      <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{opt.label}</span>
+                        {opt.hover && (
+                          <HoverCard.Root>
+                            <HoverCard.Trigger asChild>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '20px',
+                                backgroundColor: 'var(--action)',
+                                color: 'var(--primary)',
                                 border: '1px solid var(--border)',
-                                borderRadius: '8px',
-                                padding: '10px',
-                                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-                                zIndex: 1000,
-
-                                maxWidth: 'min(400px, calc(100vw - 40px))',
-                                maxHeight: 'calc(80vh)',
-                                overflowY: 'auto',
-                                overflowX: 'auto',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.03em',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0,
+                                marginLeft: '10px',
                               }}
-                            >
-                              {opt.hover.content}
-                            </HoverCard.Content>
-                          </HoverCard.Portal>
-                        </HoverCard.Root>
-                      )}
-                      {opt.sublabel && (
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '10px' }}>
-                          {opt.sublabel}
-                        </span>
-                      )}
+                              >
+                                {opt.hover.text}
+                              </span>
+                            </HoverCard.Trigger>
+                            <HoverCard.Portal>
+                              <HoverCard.Content
+                                side="right"
+                                sideOffset={5}
+                                style={{
+                                  background: 'var(--primary)',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: '8px',
+                                  padding: '10px',
+                                  boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                                  zIndex: 1000,
+
+                                  maxWidth: 'min(400px, calc(100vw - 40px))',
+                                  maxHeight: 'calc(80vh)',
+                                  overflowY: 'auto',
+                                  overflowX: 'auto',
+                                }}
+                              >
+                                {opt.hover.content}
+                              </HoverCard.Content>
+                            </HoverCard.Portal>
+                          </HoverCard.Root>
+                        )}
+                        {opt.sublabel && (
+                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: '10px' }}>
+                            {opt.sublabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {opt.badge && (
                       <span style={{

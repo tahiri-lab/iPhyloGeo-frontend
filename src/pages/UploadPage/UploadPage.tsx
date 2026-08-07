@@ -12,6 +12,8 @@ import ClimateChartBuilder from '../../components/molecules/ClimateChartBuilder/
 import AlignmentViewer from '../../components/molecules/AlignmentViewer/AlignmentViewer'
 import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsForm/AnalysisSettingsForm'
 import { inputStyle } from '../../components/atoms/PageGrid/PageGrid'
+import { usePresets } from '../../context/PresetContext'
+import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
 
 interface UploadedFile {
   name: string
@@ -99,15 +101,6 @@ function FileDropZone({
   )
 }
 
-/**
- * `/upload` — file intake, inline per-analysis settings, and pipeline launch.
- * Each file upload fires immediately (not deferred to submit), and the
- * analysis name is checked for uniqueness with a 400ms debounce against
- * `results.checkName`. Settings edited here are sent as a one-off override
- * with the job — see API.md's Jobs section for how that differs from the
- * global settings on `/settings`. After `jobs.create`, polls job status
- * every 2s until `complete` (→ navigates to `/results`) or `error`.
- */
 export default function UploadPage() {
   const navigate = useNavigate()
   const { t, lang } = useLang()
@@ -118,17 +111,19 @@ export default function UploadPage() {
   const [uploadingClimatic, setUploadingClimatic] = useState(false)
   const [uploadingGenetic, setUploadingGenetic] = useState(false)
   const [running, setRunning] = useState(false)
+  const [disableCreation, setDisableCreation] = useState(false);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [, setResultId] = useState<string | null>(null)
+  const [resultId, setResultId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
   const [emailSent, setEmailSent] = useState(false)
   const notifyEmailRef = useRef<string | null>(null)
 
-  // Settings
+  // Settings & Presets
   const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { clearSelection } = usePresets()
 
   // Analysis name + duplicate check
   const [analysisName, setAnalysisName] = useState('')
@@ -136,12 +131,21 @@ export default function UploadPage() {
   const [checkingName, setCheckingName] = useState(false)
   const nameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [defaultSettings, setDefaultSettings] = useState<Partial<AnalysisSettings>>({})
+
   useEffect(() => {
     api.settings.get()
-      // Merge: global settings as base, preserve any changes the user already made
-      .then(s => setLocalSettings(prev => ({ ...s, ...prev })))
-      .catch(() => {})
+      .then(s => {
+        setDefaultSettings(s)
+        setLocalSettings(prev => ({ ...s, ...prev }))
+      })
+      .catch(() => { })
   }, [])
+
+  const handleResetSettings = () => {
+    setLocalSettings(defaultSettings)
+    clearSelection()
+  }
 
   useEffect(() => {
     if (!analysisName) {
@@ -162,8 +166,10 @@ export default function UploadPage() {
     }, 400)
   }, [analysisName])
 
+
+
   const uploading = uploadingClimatic || uploadingGenetic
-  const canRun = !!climaticId && !!geneticId && !running && !uploading && !nameTaken && !!analysisName
+  const canRun = !!climaticId && !!geneticId && !running && !uploading && !nameTaken && !!analysisName && !disableCreation
 
   const statusLabel = (status: string) => {
     const map: Record<string, string> = {
@@ -220,7 +226,7 @@ export default function UploadPage() {
 
   const handleRun = async () => {
     if (!climaticId || !geneticId) return
-    setRunning(true)
+    setDisableCreation(true)
     setError(null)
     setJobStatus(null)
     setResultId(null)
@@ -234,6 +240,7 @@ export default function UploadPage() {
         settings: localSettings,
       })
       setResultId(result_id)
+      setRunning(true)
 
       const poll = async () => {
         try {
@@ -241,24 +248,27 @@ export default function UploadPage() {
           setJobStatus(status)
           if (status.status === 'complete') {
             if (notifyEmailRef.current && result_id) {
-              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => {})
+              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => { })
             }
             navigate('/results')
           } else if (status.status === 'error') {
             setError(status.error ?? 'Pipeline failed')
             setRunning(false)
+            setDisableCreation(false)
           } else {
             setTimeout(poll, 2000)
           }
         } catch (e) {
           setError(`Status check failed: ${e instanceof Error ? e.message : String(e)}`)
           setRunning(false)
+          setDisableCreation(false)
         }
       }
       poll()
     } catch (e) {
       setError(`Failed to start job: ${e instanceof Error ? e.message : String(e)}`)
       setRunning(false)
+      setDisableCreation(false)
     }
   }
 
@@ -275,119 +285,143 @@ export default function UploadPage() {
           progress={jobStatus?.progress}
           onEmailSubmit={handleEmailSubmit}
           emailSent={emailSent}
+          resultId={resultId}
         />
       )}
 
-    <PageContainer title={t.upload_title}>
-      <PageCard>
-        <PageSection title={t.upload_input_files} style={{ borderTop: 'none' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <FileDropZone
-              label={t.upload_climate_label}
-              accept=".csv,.xlsx,.xls"
-              file={climateFile}
-              uploading={uploadingClimatic}
-              onFile={handleClimaticFile}
-            />
-            <FileDropZone
-              label={t.upload_genetic_label}
-              accept=".fasta,.fa"
-              file={geneticFile}
-              uploading={uploadingGenetic}
-              onFile={handleGeneticFile}
-            />
-          </div>
+      <PageContainer title={t.upload_title}>
+        <PageCard>
+          <PageSection title={t.upload_input_files} style={{ borderTop: 'none' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <FileDropZone
+                label={t.upload_climate_label}
+                accept=".csv,.xlsx,.xls"
+                file={climateFile}
+                uploading={uploadingClimatic}
+                onFile={handleClimaticFile}
+              />
+              <FileDropZone
+                label={t.upload_genetic_label}
+                accept=".fasta,.fa"
+                file={geneticFile}
+                uploading={uploadingGenetic}
+                onFile={handleGeneticFile}
+              />
+            </div>
 
-          {/* Analysis name */}
-          <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>
-              {t.upload_analysis_name}
-            </label>
-            <input
-              type="text"
-              value={analysisName}
-              onChange={e => setAnalysisName(e.target.value)}
-              placeholder={t.upload_analysis_name}
-              style={{ ...inputStyle, maxWidth: '360px' }}
-              onFocus={e => (e.target.style.borderColor = 'var(--secondary-hover)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--secondary)')}
-            />
-            {(nameTaken || analysisName.match(/(.*) \(edit (\d+)\)$/)) && !checkingName && (
-              <span style={{ fontSize: '12px', color: 'var(--error)' }}>{t.upload_name_taken}</span>
-            )}
-          </div>
+            {/* Analysis name */}
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)' }}>
+                {t.upload_analysis_name}
+              </label>
+              <input
+                type="text"
+                value={analysisName}
+                onChange={e => setAnalysisName(e.target.value)}
+                placeholder={t.upload_analysis_name}
+                style={{ ...inputStyle, maxWidth: '360px' }}
+                onFocus={e => (e.target.style.borderColor = 'var(--secondary-hover)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--secondary)')}
+              />
+              {(nameTaken || analysisName.match(/(.*) \(edit (\d+)\)$/)) && !checkingName && (
+                <span style={{ fontSize: '12px', color: 'var(--error)' }}>{t.upload_name_taken}</span>
+              )}
+            </div>
 
-          {/* Collapsible settings */}
-          <div style={{ marginTop: '20px' }}>
-            <button
-              onClick={() => setSettingsOpen(o => !o)}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                padding: '8px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'var(--text)',
-                cursor: 'pointer',
-              }}
-            >
-              {settingsOpen ? t.upload_settings_hide : t.upload_settings_show}
-            </button>
+            {/* Collapsible settings */}
+            <div style={{ marginTop: '20px' }}>
+              <button
+                onClick={() => setSettingsOpen(o => !o)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  cursor: 'pointer',
+                }}
+              >
+                {settingsOpen ? t.upload_settings_hide : t.upload_settings_show}
+              </button>
 
-            {settingsOpen && (
-              <div style={{
-                marginTop: '16px',
-                padding: '20px',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                backgroundColor: 'var(--secondary)',
-              }}>
-                <AnalysisSettingsForm
-                  settings={localSettings}
-                  onChange={(key, value) => setLocalSettings(prev => ({ ...prev, [key]: value }))}
-                />
+              {settingsOpen && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '20px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--secondary)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '20px'
+                }}>
+                  {/* Presets Control Toolbar */}
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    paddingBottom: '16px',
+                    borderBottom: '1px solid var(--border)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                      <PresetsToolbar
+                        currentSettings={localSettings}
+                        onApplySettings={settings => setLocalSettings(settings)}
+                        onResetToDefault={handleResetSettings}
+                      />
+                    <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
+                  </div>
+                </div>
+                
+                  <AnalysisSettingsForm
+                    settings={localSettings}
+                    onChange={(key, value) => setLocalSettings(prev => ({ ...prev, [key]: value }))}
+                  />
               </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {error && (
-            <p style={{ color: 'var(--error)', fontSize: '13px', marginTop: '12px', marginBottom: 0 }}>{error}</p>
+            {error && (
+              <p style={{ color: 'var(--error)', fontSize: '13px', marginTop: '12px', marginBottom: 0 }}>{error}</p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <Button variant="actions" disabled={!canRun} onClick={handleRun}>
+                {t.upload_run}
+              </Button>
+            </div>
+          </PageSection>
+
+          {climaticPreview && (
+            <PageSection title={t.upload_climatic_preview}>
+              <ClimateChartBuilder data={climaticPreview} />
+            </PageSection>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-            <Button variant="actions" disabled={!canRun} onClick={handleRun}>
-              {t.upload_run}
-            </Button>
-          </div>
-        </PageSection>
+          {geneticPreview && Object.keys(geneticPreview.sequences).length > 0 && (
+            <PageSection title={t.upload_genetic_preview}>
+              <AlignmentViewer data={geneticPreview} />
+            </PageSection>
+          )}
 
-        {climaticPreview && (
-          <PageSection title={t.upload_climatic_preview}>
-            <ClimateChartBuilder data={climaticPreview} />
+          <PageSection title={t.upload_how_it_works}>
+            <HelpSection>
+              <HelpHeading>{t.upload_help_climate_title}</HelpHeading>
+              <HelpText>
+                <p>{t.upload_help_climate_text}</p>
+              </HelpText>
+              <HelpHeading>{t.upload_help_genetic_title}</HelpHeading>
+              <HelpText>
+                <p>{t.upload_help_genetic_text}</p>
+              </HelpText>
+            </HelpSection>
           </PageSection>
-        )}
-
-        {geneticPreview && Object.keys(geneticPreview.sequences).length > 0 && (
-          <PageSection title={t.upload_genetic_preview}>
-            <AlignmentViewer data={geneticPreview} />
-          </PageSection>
-        )}
-
-        <PageSection title={t.upload_how_it_works}>
-          <HelpSection>
-            <HelpHeading>{t.upload_help_climate_title}</HelpHeading>
-            <HelpText>
-              <p>{t.upload_help_climate_text}</p>
-            </HelpText>
-            <HelpHeading>{t.upload_help_genetic_title}</HelpHeading>
-            <HelpText>
-              <p>{t.upload_help_genetic_text}</p>
-            </HelpText>
-          </HelpSection>
-        </PageSection>
-      </PageCard>
-    </PageContainer>
+        </PageCard>
+      </PageContainer>
     </>
   )
 }

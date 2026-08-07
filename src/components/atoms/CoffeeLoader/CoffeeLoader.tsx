@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
 import { validateEmail } from '../../../utils/validation'
 import { useServerStatus } from '../../../context/ServerStatusContext'
+import ConfirmDialog from '../../molecules/ConfirmDialog/ConfirmDialog'
+import api from '../../../services/api'
+import EmailInput from '../../molecules/EmailInput/EmailInput'
 
 function CoffeeMug() {
   return (
@@ -87,6 +90,7 @@ interface CoffeeLoaderProps {
   progress?: number
   onEmailSubmit?: (email: string) => void
   emailSent?: boolean
+  resultId: string
 }
 
 
@@ -95,11 +99,25 @@ export default function CoffeeLoader({
   progress,
   onEmailSubmit,
   emailSent = false,
+  resultId,
 }: CoffeeLoaderProps) {
   const { t } = useLang()
   const { isOffline } = useServerStatus()
+  const cancelDialogRef = useRef<HTMLDialogElement>(null)
   const [email, setEmail] = useState('')
   const [emailErr, setEmailErr] = useState('')
+  const [canCancel, setCanCancel] = useState(true)
+
+  const handleCancel = async () => {
+    const success = await api.jobs.cancel(resultId)
+    if (!success) {
+      // TODO replace with toast
+      alert("Failed to cancel task")
+    }
+    else {
+      setCanCancel(false)
+    }
+  }
 
   const handleSubmit = () => {
     if (!email || !validateEmail(email)) {
@@ -133,7 +151,7 @@ export default function CoffeeLoader({
           alignItems: 'center',
           gap: 18,
           boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
-          width: 380,
+          width: 400,
           maxWidth: '92vw',
           border: '1px solid var(--border)',
         }}
@@ -177,6 +195,35 @@ export default function CoffeeLoader({
         )}
 
         {/* Divider and email form */}
+         {canCancel && <button
+          onClick={() => { cancelDialogRef.current!.showModal() }}
+          style={{
+            color: 'var(--primary)',
+            backgroundColor: 'var(--error)',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '5px 20px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--error-hover)')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--error)')}
+        >
+          {t.btn_cancel}
+        </button>}
+        <ConfirmDialog
+          message={t.cancel_confirm_message}
+          yesLabel={t.cancel_confirm_yes}
+          noLabel={t.cancel_confirm_no}
+          execute={handleCancel}
+          ref={cancelDialogRef}
+        />
+
+        {/* Divider */}
         {onEmailSubmit && (
           <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 18 }}>
             {emailSent ? (
@@ -184,50 +231,15 @@ export default function CoffeeLoader({
                 {t.loading_notify_sent} {email} ✓
               </p>
             ) : (
-              <>
-                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                  {t.loading_notify_prompt}
-                </p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="email"
-                    value={email}
-                    placeholder="you@example.com"
-                    onChange={e => { setEmail(e.target.value); setEmailErr('') }}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                    style={{
-                      flex: 1,
-                      borderRadius: 10,
-                      border: `1.5px solid ${emailErr ? 'var(--error)' : 'var(--border)'}`,
-                      padding: '8px 12px',
-                      fontSize: 13,
-                      color: 'var(--text)',
-                      background: 'var(--secondary)',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={handleSubmit}
-                    style={{
-                      borderRadius: 10,
-                      border: 'none',
-                      background: 'var(--action)',
-                      color: '#fff',
-                      padding: '8px 14px',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {t.btn_send}
-                  </button>
-                </div>
-                {emailErr && (
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--error)' }}>{emailErr}</p>
-                )}
-              </>
+              <EmailInput
+                description={t.loading_notify_prompt}
+                buttonLabel={t.btn_confirm}
+                secondary={true}
+                onSend={(e) => {
+                  onEmailSubmit?.(e)
+                  setEmail(e)
+                }}
+              />
             )}
           </div>
         )}
