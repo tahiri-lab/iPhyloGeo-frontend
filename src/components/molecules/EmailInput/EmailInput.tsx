@@ -59,6 +59,12 @@ export default function EmailInput({
           }}
           onFocus={e => (e.target.style.borderColor = 'var(--secondary-hover)')}
           onBlur={e => (e.target.style.borderColor = 'var(--secondary)')}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
         />
         <button
           onClick={handleSend}
