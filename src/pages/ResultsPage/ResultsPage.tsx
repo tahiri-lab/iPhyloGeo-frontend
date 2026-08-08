@@ -414,17 +414,28 @@ export default function ResultsPage() {
   }, [])
 
   const handleDelete = async (r: AnalysisResult) => {
-    try {
-      await api.results.delete(r._id)
-      setResults(prev => prev.filter(x => x._id !== r._id))
-      if (selected?._id === r._id) {
+  try {
+    await api.results.delete(r._id)
+    
+    const updatedResults = results.filter(x => x._id !== r._id)
+    setResults(updatedResults)
+
+    if (selected?._id === r._id) {
+      setConfigPanel(null)
+      
+      if (updatedResults.length > 0) {
+        // Select the first result in the updated list
+        selectResult(updatedResults[0], true)
+      } else {
+        // If there are no more results, clear the selection and reset the URL
         setSelected(null)
-        setConfigPanel(null)
+        setSearchParams({}, { replace: true })
       }
-    } catch (err) {
-      alert(`Delete failed: ${err instanceof Error ? err.message : String(err)}`)
     }
+  } catch (err) {
+    alert(`Delete failed: ${err instanceof Error ? err.message : String(err)}`)
   }
+}
 
   const handleRerun = async () => {
     if (!selected || !configPanel) return
