@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { LanguageProvider } from '../../context/LanguageContext'
+import { PresetsProvider } from '../../context/PresetContext'
 import SettingsPage from '../../pages/SettingsPage/SettingsPage'
 
 const { mockSettingsGet, mockSettingsUpdate } = vi.hoisted(() => ({
@@ -22,9 +23,19 @@ vi.mock('../../services/api', () => ({
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <MemoryRouter>
-      <LanguageProvider>{children}</LanguageProvider>
+      <LanguageProvider>
+        <PresetsProvider>
+          {children}
+        </PresetsProvider>
+      </LanguageProvider>
     </MemoryRouter>
   )
+}
+
+async function changeSomething(user) {
+    const setting = await waitFor(() => screen.getByLabelText('Bootstrap Threshold'))
+    user.clear(setting)
+    user.type(setting, "11")
 }
 
 describe('SettingsPage', () => {
@@ -70,6 +81,7 @@ describe('SettingsPage', () => {
   it('calls api.settings.update when the save button is clicked', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />, { wrapper: Wrapper })
+    await changeSomething(user)
     await waitFor(() => screen.getByRole('button', { name: /save settings/i }))
     await user.click(screen.getByRole('button', { name: /save settings/i }))
     expect(mockSettingsUpdate).toHaveBeenCalledOnce()
@@ -78,6 +90,7 @@ describe('SettingsPage', () => {
   it('shows a success message after a successful save', async () => {
     const user = userEvent.setup()
     render(<SettingsPage />, { wrapper: Wrapper })
+    await changeSomething(user)
     await waitFor(() => screen.getByRole('button', { name: /save settings/i }))
     await user.click(screen.getByRole('button', { name: /save settings/i }))
     await waitFor(() => expect(screen.getByText('Settings saved.')).toBeInTheDocument())
@@ -87,6 +100,7 @@ describe('SettingsPage', () => {
     mockSettingsUpdate.mockRejectedValueOnce(new Error('Network error'))
     const user = userEvent.setup()
     render(<SettingsPage />, { wrapper: Wrapper })
+    await changeSomething(user)
     await waitFor(() => screen.getByRole('button', { name: /save settings/i }))
     await user.click(screen.getByRole('button', { name: /save settings/i }))
     await waitFor(() => expect(screen.getByText(/failed to save/i)).toBeInTheDocument())
