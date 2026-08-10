@@ -93,7 +93,7 @@ export default function SearchBar({ options, value, onSelect, placeholder = 'Sel
 
       return true
     })
-  }, [query])
+  }, [options, query, searchMode])
 
   // The array reference always changes when filtered is recomputed so we need a stable way to compare
   const filteredIds = filtered.map(x => x.id).join(",")

@@ -243,7 +243,7 @@ export const results = {
   },
 
   /** Send a results-ready email notification. */
-  email: (id: string, email: string, lang = "en") =>
+  email: async (id: string, email: string, lang = "en") =>
     request<{ message: string }>(`/api/results/${id}/email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

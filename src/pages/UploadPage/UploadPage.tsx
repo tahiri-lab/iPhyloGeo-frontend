@@ -246,7 +246,12 @@ export default function UploadPage() {
           setJobStatus(status)
           if (status.status === 'complete') {
             if (notifyEmailRef.current && result_id) {
-              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => { })
+              try {
+                await api.results.email(result_id, notifyEmailRef.current, lang)
+              } catch (e) {
+                // TODO replace with toast
+                alert(`Email failed to send: ${e instanceof Error ? e.message : String(e)}`)
+              }
             }
             navigate('/results')
           } else if (status.status === 'error') {
