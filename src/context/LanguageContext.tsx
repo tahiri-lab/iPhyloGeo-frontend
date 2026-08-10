@@ -180,6 +180,10 @@ export interface Translations {
   btn_download: string
   btn_send: string
   btn_confirm: string
+  cancel_confirm_message: string
+  cancel_confirm_yes: string
+  cancel_confirm_no: string
+  btn_cancel: string
 }
 
 const translations: Record<Lang, Translations> = {
@@ -190,12 +194,16 @@ const translations: Record<Lang, Translations> = {
     nav_results: 'Results',
     nav_graph: 'Graph View',
     nav_compare: 'Compare',
+    cancel_confirm_message: 'Are you sure you want to cancel this analysis?',
+    cancel_confirm_yes: 'Cancel',
+    cancel_confirm_no: 'Go back',
     nav_dark_mode: 'Dark mode',
     nav_light_mode: 'Light mode',
     nav_language: 'Language selection',
     nav_languages_list: ['English','French','Spanish'],
     nav_toggle_open: 'Open sidebar',
     nav_toggle_close: 'Close sidebar',
+    btn_cancel: 'Cancel',
     compare_title: 'Compare Analyses',
     compare_select_analyses: 'Select Analyses',
     compare_analysis_a: 'Analysis A',
@@ -351,6 +359,9 @@ const translations: Record<Lang, Translations> = {
     nav_upload: 'Importer',
     nav_settings: 'Paramètres',
     nav_results: 'Résultats',
+    cancel_confirm_message: 'Êtes-vous certain de vouloir annuler l\'analyse?',
+    cancel_confirm_yes: 'Annuler',
+    cancel_confirm_no: 'Retourner en arrière',
     nav_graph: 'Vue graphique',
     nav_compare: 'Comparer',
     nav_dark_mode: 'Mode sombre',
@@ -360,6 +371,7 @@ const translations: Record<Lang, Translations> = {
     nav_toggle_open: 'Ouvrir la barre de navigation',
     nav_toggle_close: 'Fermer la barre de navigation',
     compare_title: 'Comparer les analyses',
+    btn_cancel: 'Annuler',
     compare_select_analyses: 'Sélectionner les analyses',
     compare_analysis_a: 'Analyse A',
     compare_analysis_b: 'Analyse B',
@@ -510,6 +522,10 @@ const translations: Record<Lang, Translations> = {
     preset_name: 'Nom du préréglage',
   },
   es: {
+    cancel_confirm_message: '¿Está seguro de que desea cancelar el análisis?',
+    cancel_confirm_yes: 'Cancelar',
+    btn_cancel: 'Cancelar',
+    cancel_confirm_no: 'Volver atrás', 
     nav_home: 'Inicio',
     nav_upload: 'Cargar',
     nav_settings: 'Ajustes',

@@ -112,12 +112,13 @@ export default function UploadPage() {
   const [uploadingGenetic, setUploadingGenetic] = useState(false)
   const [running, setRunning] = useState(false)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [, setResultId] = useState<string | null>(null)
+  const [resultId, setResultId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
   const [emailSent, setEmailSent] = useState(false)
   const notifyEmailRef = useRef<string | null>(null)
+  const coffeeLoaderRef = useRef<HTMLDialogElement>(null)
 
   // Settings & Presets
   const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
@@ -140,6 +141,14 @@ export default function UploadPage() {
       })
       .catch(() => { })
   }, [])
+
+  useEffect(() => {
+    if (running) {
+      coffeeLoaderRef.current!.showModal()
+    } else {
+      coffeeLoaderRef.current!.close()
+    }
+  }, [running])
 
   const handleResetSettings = () => {
     setLocalSettings(defaultSettings)
@@ -225,7 +234,6 @@ export default function UploadPage() {
 
   const handleRun = async () => {
     if (!climaticId || !geneticId) return
-    setRunning(true)
     setError(null)
     setJobStatus(null)
     setResultId(null)
@@ -239,6 +247,7 @@ export default function UploadPage() {
         settings: localSettings,
       })
       setResultId(result_id)
+      setRunning(true)
 
       const poll = async () => {
         try {
@@ -279,14 +288,14 @@ export default function UploadPage() {
 
   return (
     <>
-      {running && (
-        <CoffeeLoader
-          statusLabel={jobStatus ? statusLabel(jobStatus.status) : t.upload_starting_pipeline}
-          progress={jobStatus?.progress}
-          onEmailSubmit={handleEmailSubmit}
-          emailSent={emailSent}
-        />
-      )}
+      <CoffeeLoader
+        statusLabel={jobStatus ? statusLabel(jobStatus.status) : t.upload_starting_pipeline}
+        progress={jobStatus?.progress}
+        onEmailSubmit={handleEmailSubmit}
+        emailSent={emailSent}
+        ref={coffeeLoaderRef}
+        resultId={resultId}
+      />
 
       <PageContainer title={t.upload_title}>
         <PageCard>

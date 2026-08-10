@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
 import { validateEmail } from '../../../utils/validation'
@@ -89,7 +89,9 @@ interface CoffeeLoaderProps {
   statusLabel?: string
   progress?: number
   onEmailSubmit?: (email: string) => void
-  emailSent?: boolean,
+  emailSent?: boolean
+  ref: React.RefObject<HTMLDialogElement>
+  resultId: number | null
 }
 
 
@@ -98,6 +100,8 @@ export default function CoffeeLoader({
   progress,
   onEmailSubmit,
   emailSent = false,
+  resultId,
+  ref,
 }: CoffeeLoaderProps) {
   const { t } = useLang()
   const { isOffline } = useServerStatus()
@@ -127,121 +131,126 @@ export default function CoffeeLoader({
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 600,
-        backdropFilter: 'blur(6px)',
-      }}
-    >
-      <div
+    <>
+      <style>
+        {`
+            .confirm-dialog::backdrop {
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(8px);
+            }
+        `}
+      </style>
+      <dialog
+        ref={ref}
+        className='confirm-dialog'
         style={{
-          background: 'var(--primary)',
           borderRadius: 24,
-          padding: '40px 36px 36px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 18,
           boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
+          border: '3px solid var(--border)',
+          background: 'var(--primary)',
+          padding: '40px 36px 36px',
+          gap: 18,
           width: 400,
           maxWidth: '92vw',
-          border: '1px solid var(--border)',
         }}
       >
-        <CoffeeMug />
+        <div
+          style={{
+            padding: '40px 36px 36px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 18,
+          }}
+        >
+          <CoffeeMug />
 
-        {/* Warning message from global context */}
-        {isOffline && (
-          <div
-            style={{
-              width: '100%',
-              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid var(--error)',
-              color: 'var(--error)',
-              padding: '8px 12px',
-              borderRadius: 10,
-              fontSize: 13,
-              textAlign: 'center',
-              fontWeight: 600,
-            }}
-          >
-            {t.server_connection_lost}
+          {/* Warning message from global context */}
+          {isOffline && (
+            <div
+              style={{
+                width: '100%',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid var(--error)',
+                color: 'var(--error)',
+                padding: '8px 12px',
+                borderRadius: 10,
+                fontSize: 13,
+                textAlign: 'center',
+                fontWeight: 600,
+              }}
+            >
+              {t.server_connection_lost}
+            </div>
+          )}
+
+          {/* Status message */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
+              {statusLabel ?? t.results_loading}
+            </p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
+              {t.loading_time_notice}
+            </p>
           </div>
-        )}
 
-        {/* Status message */}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
-            {statusLabel ?? t.results_loading}
-          </p>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
-            {t.loading_time_notice}
-          </p>
-        </div>
-
-        {/* Progress bar */}
-        {progress !== undefined && (
-          <div style={{ width: '100%' }}>
-            <ProgressBar visible progress={progress} />
-          </div>
-        )}
+          {/* Progress bar */}
+          {progress !== undefined && (
+            <div style={{ width: '100%' }}>
+              <ProgressBar visible progress={progress} />
+            </div>)}
 
         {/* Divider and email form */}
-         {canCancel && <button
-          onClick={() => { cancelDialogRef.current!.showModal() }}
-          style={{
-            color: 'var(--primary)',
-            backgroundColor: 'var(--error)',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '5px 20px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--error-hover)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--error)')}
-        >
-          {t.btn_cancel}
-        </button>}
-        <ConfirmDialog
-          message={t.cancel_confirm_message}
-          yesLabel={t.cancel_confirm_yes}
-          noLabel={t.cancel_confirm_no}
-          execute={handleCancel}
-          ref={cancelDialogRef}
-        />
+          {canCancel && <button
+            onClick={() => { cancelDialogRef.current!.showModal() }}
+            style={{
+              color: 'var(--primary)',
+              backgroundColor: 'var(--error)',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '5px 20px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--error-hover)')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--error)')}
+          >
+            {t.btn_cancel}
+          </button>}
+          <ConfirmDialog
+            message={t.cancel_confirm_message}
+            yesLabel={t.cancel_confirm_yes}
+            noLabel={t.cancel_confirm_no}
+            execute={handleCancel}
+            ref={cancelDialogRef}
+          />
 
-        {/* Divider */}
-        {onEmailSubmit && (
-          <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 18 }}>
-            {emailSent ? (
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--action)', textAlign: 'center', fontWeight: 600 }}>
-                {t.loading_notify_sent} {email} ✓
-              </p>
-            ) : (
-              <EmailInput
-                description={t.loading_notify_prompt}
-                buttonLabel={t.btn_confirm}
-                secondary={true}
-                onSend={(e) => {
-                  onEmailSubmit?.(e)
-                  setEmail(e)
-                }}
-              />
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+          {/* Divider */}
+          {onEmailSubmit && (
+            <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 18 }}>
+              {emailSent ? (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--action)', textAlign: 'center', fontWeight: 600 }}>
+                  {t.loading_notify_sent} {email} ✓
+                </p>
+              ) : (
+                <EmailInput
+                  description={t.loading_notify_prompt}
+                  buttonLabel={t.btn_confirm}
+                  secondary={true}
+                  onSend={(e) => {
+                    onEmailSubmit?.(e)
+                    setEmail(e)
+                  }}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </dialog>
+    </>
   )
 }
