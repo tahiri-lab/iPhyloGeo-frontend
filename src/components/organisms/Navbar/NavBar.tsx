@@ -164,7 +164,6 @@ export default function NavBar() {
 
   return (
     <nav
-      onMouseLeave={() => {setMinimized(true);setOpen(false)}}
       style={{
         position: 'sticky',
         top: !isSmall ? '10px' : '0',
@@ -329,7 +328,7 @@ export default function NavBar() {
         {/* Language switcher */}
         {(
           <div style={{ display: 'flex', gap: '4px', marginBottom: '2px' }}>
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               {/* Trigger */}
               <button
                 aria-haspopup="listbox"
@@ -353,7 +352,7 @@ export default function NavBar() {
                   cursor: 'pointer',
                 }}
               >
-                {lang}
+                {minimized ? lang : t.nav_languages_list[LANGS.indexOf(lang)]}
               </button>
 
               {/* Dropdown */}
@@ -393,38 +392,17 @@ export default function NavBar() {
                         background: 'var(--action-soft-bg)',
                         fontSize: '11px',
                         fontWeight: 700,
+                        width: '100%',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
                     >
-                      {l}
+                      {minimized ? l : t.nav_languages_list[LANGS.indexOf(l)]}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-           {/*{LANGS.map(l => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                style={{
-                  flex: 1,
-                  padding: '6px 0',
-                  borderRadius: '8px',
-                  border: `1px solid ${lang === l ? 'var(--action)' : 'var(--border)'}`,
-                  background: lang === l ? 'var(--action-soft-bg)' : 'transparent',
-                  color: lang === l ? 'var(--action)' : 'var(--text-secondary)',
-                  fontSize: '11px',
-                  fontWeight: lang === l ? 700 : 400,
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {l}
-              </button>
-            ))}*/}
           </div>
         )}
 
