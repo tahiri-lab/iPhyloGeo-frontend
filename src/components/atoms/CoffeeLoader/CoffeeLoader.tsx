@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useLang } from '../../../context/LanguageContext'
 import ProgressBar from '../ProgressBar/ProgressBar'
 import { validateEmail } from '../../../utils/validation'
@@ -89,8 +89,7 @@ interface CoffeeLoaderProps {
   statusLabel?: string
   progress?: number
   onEmailSubmit?: (email: string) => void
-  emailSent?: boolean
-  resultId: string
+  emailSent?: boolean,
 }
 
 
@@ -99,7 +98,6 @@ export default function CoffeeLoader({
   progress,
   onEmailSubmit,
   emailSent = false,
-  resultId,
 }: CoffeeLoaderProps) {
   const { t } = useLang()
   const { isOffline } = useServerStatus()
