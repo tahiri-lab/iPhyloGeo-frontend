@@ -13,13 +13,32 @@ function ThemeDisplay() {
   )
 }
 
+// Mock default dark theme in browser
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: query === '(prefers-color-scheme: dark)',
+  }),
+});
+
 describe('ThemeContext', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.classList.remove('dark')
   })
 
-  it('defaults to light theme when localStorage is empty', () => {
+  it('defaults to dark browser theme when localStorage is empty', () => {
+    render(<ThemeProvider><ThemeDisplay /></ThemeProvider>)
+    expect(screen.getByTestId('theme').textContent).toBe('dark')
+  })
+
+  it('defaults to light browser theme when localStorage is empty', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: query !== '(prefers-color-scheme: dark)',
+      }),
+    });
     render(<ThemeProvider><ThemeDisplay /></ThemeProvider>)
     expect(screen.getByTestId('theme').textContent).toBe('light')
   })

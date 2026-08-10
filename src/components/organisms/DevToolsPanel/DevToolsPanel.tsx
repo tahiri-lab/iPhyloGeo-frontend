@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import cytoscape from 'cytoscape'
 import { useTheme } from '../../../context/ThemeContext'
 import { useDevTools } from '../../../context/DevToolsContext'
-import api from '../../../services/api'
 import { type LayoutType, LAYOUTS, getLayoutConfig } from '../../../constants/layoutConfig'
 import { zoomBtnStyle } from '../../../styles/commonStyles'
+import { useServerStatus } from '../../../context/ServerStatusContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -251,32 +251,13 @@ function AppGraphView({ layout, darkMode }: { layout: LayoutType; darkMode: bool
 export default function DevToolsPanel() {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PanelTab>('server')
-  const [serverState, setServerState] = useState<ServerState>('checking')
-  const [latency, setLatency] = useState<number | null>(null)
-  const [lastPing, setLastPing] = useState<Date | null>(null)
+  const { serverState, latency, lastPing } = useServerStatus()
   const [layout, setLayout] = useState<LayoutType>('force')
   const { errors, clearErrors } = useDevTools()
   const { theme } = useTheme()
   const darkMode = theme === 'dark'
 
-  // Ping server every 5 s
-  useEffect(() => {
-    const ping = async () => {
-      const t0 = Date.now()
-      try {
-        await api.results.list()
-        setLatency(Date.now() - t0)
-        setServerState('connected')
-      } catch {
-        setServerState('disconnected')
-        setLatency(null)
-      }
-      setLastPing(new Date())
-    }
-    ping()
-    const id = setInterval(ping, 5000)
-    return () => clearInterval(id)
-  }, [])
+
 
   const dot = (s: ServerState) => ({
     checking:    '#F59E0B',

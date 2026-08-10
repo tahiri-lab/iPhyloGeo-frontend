@@ -112,7 +112,7 @@ export default function UploadPage() {
   const [uploadingGenetic, setUploadingGenetic] = useState(false)
   const [running, setRunning] = useState(false)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [, setResultId] = useState<string | null>(null)
+  const [resultId, setResultId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
@@ -234,7 +234,6 @@ export default function UploadPage() {
 
   const handleRun = async () => {
     if (!climaticId || !geneticId) return
-    setRunning(true)
     setError(null)
     setJobStatus(null)
     setResultId(null)
@@ -248,6 +247,7 @@ export default function UploadPage() {
         settings: localSettings,
       })
       setResultId(result_id)
+      setRunning(true)
 
       const poll = async () => {
         try {
@@ -255,7 +255,12 @@ export default function UploadPage() {
           setJobStatus(status)
           if (status.status === 'complete') {
             if (notifyEmailRef.current && result_id) {
-              api.results.email(result_id, notifyEmailRef.current, lang).catch(() => { })
+              try {
+                await api.results.email(result_id, notifyEmailRef.current, lang)
+              } catch (e) {
+                // TODO replace with toast
+                alert(`Email failed to send: ${e instanceof Error ? e.message : String(e)}`)
+              }
             }
             navigate('/results')
           } else if (status.status === 'error') {
@@ -289,6 +294,7 @@ export default function UploadPage() {
         onEmailSubmit={handleEmailSubmit}
         emailSent={emailSent}
         ref={coffeeLoaderRef}
+        resultId={resultId}
       />
 
       <PageContainer title={t.upload_title}>

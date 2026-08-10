@@ -25,14 +25,15 @@ export default function PageGrid({ children, columns = 3, style }: PageGridProps
 interface PageFieldProps {
   label?: string
   children: ReactNode
+  forId?: string
 }
 
 /** Labeled form field wrapper — stacks an optional label above its input(s). */
-export function PageField({ label, children }: PageFieldProps) {
+export function PageField({ forId, label, children }: PageFieldProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
       {label && (
-        <label style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text)' }}>
+        <label htmlFor={forId} style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text)' }}>
           {label}
         </label>
       )}
