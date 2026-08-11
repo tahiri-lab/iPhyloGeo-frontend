@@ -10,6 +10,8 @@ import { type LayoutType, LAYOUTS } from '../../constants/layoutConfig'
 import { selectStyle } from '../../styles/commonStyles'
 import TreePagination from '../../components/molecules/Pagination/Pagination'
 import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
+import SettingsView from '../../components/organisms/SettingsView/SettingsView'
+import SearchBar from '../../components/molecules/SearchBar/SearchBar'
 
 // ── GraphPage ─────────────────────────────────────────────────────────────────
 
@@ -87,35 +89,42 @@ export default function GraphPage() {
       <PageCard>
         {/* ── Controls ── */}
         <PageSection title="" style={{ borderTop: 'none', paddingBottom: 12, paddingTop: 12 }}>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            {results.length === 0 ? (
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>{t.results_no_results}</p>
-            ) : (
-              <div>
-                <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{t.graph_result}</p>
+          {results.length === 0 ? (
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>{t.results_no_results}</p>
+          ) : (
+            <div style={{ display: 'flex', gap: 15, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <SearchBar
+                options={results.map(r => {
+                  const editMatch = r.name.match(/^(.*) \((edit \d+)\)$/)
+                  return {
+                    id: r._id,
+                    label: editMatch ? editMatch[1] : r.name,
+                    hover: {
+                      text: editMatch ? editMatch[2] : "OG",
+                      content: <SettingsView settings={r.settings ?? null} label={null} otherSettings={null} otherLabel={null} wide={null} />,
+                    },
+                    sublabel: new Date(r.created_at).toLocaleString(),
+                    badge: r.status,
+                  }
+                })}
+                value={selected?._id ?? null}
+                onSelect={id => {
+                  const r = results.find(r => r._id === id)
+                  if (r) { loadResult(r); setTreeTab('climatic') }
+                }}
+              />
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }} >
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{t.graph_layout}</p>
                 <select
-                  style={{ ...selectStyle, minWidth: 200 }}
-                  value={selected?._id ?? ''}
-                  onChange={e => {
-                    const r = results.find(r => r._id === e.target.value)
-                    if (r) { loadResult(r); setTreeTab('climatic') }
-                  }}
+                  style={selectStyle}
+                  value={layout}
+                  onChange={e => setLayout(e.target.value as LayoutType)}
                 >
-                  {results.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                  {LAYOUTS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
               </div>
-            )}
-            <div>
-              <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{t.graph_layout}</p>
-              <select
-                style={selectStyle}
-                value={layout}
-                onChange={e => setLayout(e.target.value as LayoutType)}
-              >
-                {LAYOUTS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-              </select>
             </div>
-          </div>
+          )}
         </PageSection>
 
         <>

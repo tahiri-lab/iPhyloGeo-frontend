@@ -33,18 +33,85 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
   const focusStyle: CSSProperties = { borderColor: 'var(--secondary-hover)' }
   const blurStyle: CSSProperties = { borderColor: 'var(--secondary)' }
 
-  const numInput = (key: keyof AnalysisSettings, fallback: number, extra?: React.InputHTMLAttributes<HTMLInputElement>) => (
-    <input
-      type="number"
-      value={num(key, fallback)}
-      readOnly={readOnly}
-      onChange={readOnly ? undefined : e => onChange(key, Number(e.target.value))}
-      onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
-      onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
-      style={{ ...inputStyle, opacity: readOnly ? 0.75 : 1, cursor: readOnly ? 'default' : undefined }}
-      {...extra}
-    />
-  )
+  const numInput = (
+    keys: keyof AnalysisSettings | Array<keyof AnalysisSettings>,
+    fallback: number,
+    extra?: React.InputHTMLAttributes<HTMLInputElement>
+  ) => {
+    const keyList = Array.isArray(keys) ? keys : [keys]
+    const primaryKey = keyList[0]
+    const update = (v: string | number) => {
+      for (const key of keyList) {
+        onChange(key, Number(v))
+      }
+    }
+
+    return (
+      <div
+        style={{
+          display: 'inline-flex',
+          borderRadius: 4,
+          overflow: 'hidden',
+          border: '2px solid var(--secondary)',
+          backgroundColor: 'var(--primary)',
+          borderRadius: '10px',
+        }}
+      >
+        <input
+          type="number"
+          value={num(primaryKey, fallback)}
+          readOnly={readOnly}
+          onChange={readOnly ? undefined : e => update(e.target.value)}
+          onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
+          onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
+          style={{
+            height: '38px',
+            width: '100%',
+            padding: '10px 14px',
+            backgroundColor: 'var(--primary)',
+            color: 'var(--text)',
+            fontSize: '14px',
+            fontWeight: 600,
+            boxSizing: 'border-box',
+            outline: 'none',
+            transition: 'border-color 0.2s ease',
+            opacity: readOnly ? 0.75 : 1,
+            cursor: readOnly ? 'default' : undefined,
+          }}
+          {...extra}
+        />
+
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            fontSize: '13px',
+            paddingRight: '8px',
+            gap: '3px',
+            lineHeight: '1',
+            color: 'var(--action)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => update(Number(num(primaryKey, fallback)) + 1)}
+            style={{ cursor: 'pointer', padding: 0, lineHeight: 1 }}
+          >
+            ▲
+          </button>
+
+          <button
+            type="button"
+            onClick={() => update(Number(num(primaryKey, fallback)) - 1)}
+            style={{ cursor: 'pointer', padding: 0, lineHeight: 1, paddingBottom: '2px' }}
+          >
+            ▼
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const selectStyle: CSSProperties = {
     ...inputStyle,
@@ -55,6 +122,7 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
   const sel = (key: keyof AnalysisSettings, fallback: string, options: string[]) => (
     <select
       value={str(key, fallback)}
+      id={key} 
       disabled={readOnly}
       onChange={readOnly ? undefined : e => onChange(key, e.target.value)}
       style={selectStyle}
@@ -71,35 +139,23 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
           {t.settings_analysis_params}
         </p>
         <PageGrid columns={3}>
-          <PageField label={t.settings_bootstrap}>
+          <PageField forId='bootstrap_threshold' label={t.settings_bootstrap}>
             {numInput('bootstrap_threshold', 10, { min: '0' })}
           </PageField>
-          <PageField label={t.settings_window_size}>
+          <PageField forId='window_size' label={t.settings_window_size}>
             {numInput('window_size', 400)}
           </PageField>
-          <PageField label={t.settings_step_size}>
+          <PageField forId='step_size' label={t.settings_step_size}>
             {numInput('step_size', 200)}
           </PageField>
-          <PageField label={t.settings_dist_threshold}>
+          <PageField forId='dist_threshold' label={t.settings_dist_threshold}>
             {numInput('dist_threshold', 10000)}
           </PageField>
-          <PageField label={t.settings_rate_similarity}>
+          <PageField forId='rate_similarity' label={t.settings_rate_similarity}>
             {numInput('rate_similarity', 50, { min: '0', max: '100' })}
           </PageField>
           <PageField label={t.settings_permutations}>
-            <input
-              type="number"
-              value={num('permutations_mantel_test', 999)}
-              readOnly={readOnly}
-              onChange={readOnly ? undefined : e => {
-                const v = Number(e.target.value)
-                onChange('permutations_mantel_test', v)
-                onChange('permutations_protest', v)
-              }}
-              onFocus={readOnly ? undefined : e => Object.assign(e.target.style, focusStyle)}
-              onBlur={readOnly ? undefined : e => Object.assign(e.target.style, blurStyle)}
-              style={{ ...inputStyle, opacity: readOnly ? 0.75 : 1, cursor: readOnly ? 'default' : undefined }}
-            />
+            {numInput(['permutations_mantel_test', 'permutations_protest'], 999)}
           </PageField>
         </PageGrid>
       </div>
@@ -110,25 +166,25 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
           {t.settings_methods}
         </p>
         <PageGrid columns={3}>
-          <PageField label={t.settings_alignment_method}>
+          <PageField forId='alignment_method' label={t.settings_alignment_method}>
             {sel('alignment_method', 'PairwiseAlign', ['NoAlignment', 'PairwiseAlign', 'MUSCLE', 'CLUSTALW', 'MAFFT'])}
           </PageField>
-          <PageField label={t.settings_distance_method}>
+          <PageField forId='distance_method' label={t.settings_distance_method}>
             {sel('distance_method', 'LeastSquare', ['All', 'LeastSquare', 'RobinsonFoulds', 'Bipartition'])}
           </PageField>
-          <PageField label={t.settings_fit_method}>
+          <PageField forId='fit_method' label={t.settings_fit_method}>
             {sel('fit_method', 'WiderFit', ['WiderFit', 'NarrowFit'])}
           </PageField>
-          <PageField label={t.settings_tree_type}>
+          <PageField forId='tree_type' label={t.settings_tree_type}>
             {sel('tree_type', 'BioPython', ['BioPython', 'Fast Tree'])}
           </PageField>
-          <PageField label={t.settings_similarity_method}>
+          <PageField forId='method_similarity' label={t.settings_similarity_method}>
             {sel('method_similarity', 'Hamming', ['Hamming', 'Levenshtein', 'DamerauLevenshtein', 'Jaro', 'JaroWinkler', 'SmithWaterman', 'Jaccard', 'SorensenDice'])}
           </PageField>
-          <PageField label={t.settings_statistical_test}>
+          <PageField forId='statistical_test' label={t.settings_statistical_test}>
             {sel('statistical_test', 'Both', ['Both', 'MantelTest', 'Procrustes', 'None'])}
           </PageField>
-          <PageField label={t.settings_mantel_method}>
+          <PageField forId='mantel_test_method' label={t.settings_mantel_method}>
             {sel('mantel_test_method', 'Pearson', ['Pearson', 'Spearman', 'KendallTau'])}
           </PageField>
         </PageGrid>
@@ -140,16 +196,16 @@ export default function AnalysisSettingsForm({ settings, onChange, readOnly = fa
           {t.settings_preprocessing}
         </p>
         <PageGrid columns={2}>
-          <PageField label={t.settings_genetic_preprocessing}>
+          <PageField forId='preprocessing_genetic' label={t.settings_genetic_preprocessing}>
             {sel('preprocessing_genetic', 'Disabled', ['Disabled', 'Enabled'])}
           </PageField>
-          <PageField label={t.settings_climatic_preprocessing}>
+          <PageField forId='preprocessing_climatic' label={t.settings_climatic_preprocessing}>
             {sel('preprocessing_climatic', 'Disabled', ['Disabled', 'Enabled'])}
           </PageField>
-          <PageField label={t.settings_climatic_correlation}>
+          <PageField forId='correlation_climatic_enabled' label={t.settings_climatic_correlation}>
             {sel('correlation_climatic_enabled', 'Disabled', ['Disabled', 'Enabled'])}
           </PageField>
-          <PageField label={t.settings_correlation_threshold}>
+          <PageField forId='correlation_threshold_climatic' label={t.settings_correlation_threshold}>
             {numInput('correlation_threshold_climatic', 0.9, { step: '0.01', min: '0', max: '1' })}
           </PageField>
         </PageGrid>

@@ -13,6 +13,7 @@ export interface Translations {
   nav_dark_mode: string
   nav_light_mode: string
   nav_language: string
+  nav_languages_list: string[]
   nav_toggle_open: string
   nav_toggle_close: string
   // Compare page
@@ -169,12 +170,20 @@ export interface Translations {
   error_bootstrap_threshold: string
   error_dist_threshold: string
   error_correlation_threshold: string
+  // CoffeeLoader
+  server_connection_lost: string
+  loading_time_notice: string
   //Preset
   preset_select: string
   preset_name: string
   // Shared
   btn_download: string
   btn_send: string
+  btn_confirm: string
+  cancel_confirm_message: string
+  cancel_confirm_yes: string
+  cancel_confirm_no: string
+  btn_cancel: string
 }
 
 const translations: Record<Lang, Translations> = {
@@ -185,11 +194,16 @@ const translations: Record<Lang, Translations> = {
     nav_results: 'Results',
     nav_graph: 'Graph View',
     nav_compare: 'Compare',
+    cancel_confirm_message: 'Are you sure you want to cancel this analysis?',
+    cancel_confirm_yes: 'Cancel',
+    cancel_confirm_no: 'Go back',
     nav_dark_mode: 'Dark mode',
     nav_light_mode: 'Light mode',
     nav_language: 'Language selection',
+    nav_languages_list: ['English','French','Spanish'],
     nav_toggle_open: 'Open sidebar',
     nav_toggle_close: 'Close sidebar',
+    btn_cancel: 'Cancel',
     compare_title: 'Compare Analyses',
     compare_select_analyses: 'Select Analyses',
     compare_analysis_a: 'Analysis A',
@@ -216,7 +230,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filter by name…",
     results_searchFilterByStatusComplete: "Complete",
     results_searchFilterByStatusPending: "Pending",
-    results_searchFilterByStatusFailed: "Failed",
+    results_searchFilterByStatusFailed: "Error",
     results_searchFilterByStatusAll: "All statuses",
     results_searchFilterModeName: "Name",
     results_searchFilterModeStatus: "Status",
@@ -327,6 +341,7 @@ const translations: Record<Lang, Translations> = {
     results_config_cancel: 'Cancel',
     btn_download: 'Download',
     btn_send: 'Send',
+    btn_confirm: 'Confirm',
     error_window_size: "Window size must be a positive number (> 0).",
     error_step_size: "Step size must be a positive number (> 0).",
     error_rate_similarity: "Rate similarity must be a non-negative number (>= 0).",
@@ -334,6 +349,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Bootstrap threshold must be a non-negative number (>= 0).",
     error_dist_threshold: "Distance threshold must be a non-negative number (>= 0).",
     error_correlation_threshold: "Correlation threshold must be between 0 and 1.",
+    server_connection_lost: "Connection to server lost...",
+    loading_time_notice: "This may take a few minutes…",
     preset_select: 'Select Preset',
     preset_name: 'Preset name',
   },
@@ -342,14 +359,19 @@ const translations: Record<Lang, Translations> = {
     nav_upload: 'Importer',
     nav_settings: 'Paramètres',
     nav_results: 'Résultats',
+    cancel_confirm_message: 'Êtes-vous certain de vouloir annuler l\'analyse?',
+    cancel_confirm_yes: 'Annuler',
+    cancel_confirm_no: 'Retourner en arrière',
     nav_graph: 'Vue graphique',
     nav_compare: 'Comparer',
     nav_dark_mode: 'Mode sombre',
     nav_light_mode: 'Mode clair',
     nav_language: 'Selection de la langue',
+    nav_languages_list: ['Anglais','Français','Espagnol'],
     nav_toggle_open: 'Ouvrir la barre de navigation',
     nav_toggle_close: 'Fermer la barre de navigation',
     compare_title: 'Comparer les analyses',
+    btn_cancel: 'Annuler',
     compare_select_analyses: 'Sélectionner les analyses',
     compare_analysis_a: 'Analyse A',
     compare_analysis_b: 'Analyse B',
@@ -375,7 +397,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filtrer par nom…",
     results_searchFilterByStatusComplete: "Complété",
     results_searchFilterByStatusPending: "En attente",
-    results_searchFilterByStatusFailed: "Échoué",
+    results_searchFilterByStatusFailed: "Erreur",
     results_searchFilterByStatusAll: "Tous les statuts",
     results_searchFilterModeName: "Nom",
     results_searchFilterModeStatus: "Statut",
@@ -486,6 +508,7 @@ const translations: Record<Lang, Translations> = {
     results_config_cancel: 'Annuler',
     btn_download: 'Télécharger',
     btn_send: 'Envoyer',
+    btn_confirm: 'Confirmer',
     error_window_size: "La taille de la fenêtre doit être un nombre strictement positif (> 0).",
     error_step_size: "Le pas de la fenêtre doit être un nombre strictement positif (> 0).",
     error_rate_similarity: "Le taux de similarité doit être un nombre positif ou nul (>= 0).",
@@ -493,10 +516,16 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "Le seuil de bootstrap doit être un nombre positif ou nul (>= 0).",
     error_dist_threshold: "Le seuil de distance doit être un nombre positif ou nul (>= 0).",
     error_correlation_threshold: "Le seuil de corrélation doit être compris entre 0 et 1.",
+    server_connection_lost: "Connexion au serveur interrompue...",
+    loading_time_notice: "Cela peut prendre quelques minutes…",
     preset_select: 'Choisir un préréglage',
     preset_name: 'Nom du préréglage',
   },
   es: {
+    cancel_confirm_message: '¿Está seguro de que desea cancelar el análisis?',
+    cancel_confirm_yes: 'Cancelar',
+    btn_cancel: 'Cancelar',
+    cancel_confirm_no: 'Volver atrás', 
     nav_home: 'Inicio',
     nav_upload: 'Cargar',
     nav_settings: 'Ajustes',
@@ -506,6 +535,7 @@ const translations: Record<Lang, Translations> = {
     nav_dark_mode: 'Modo oscuro',
     nav_light_mode: 'Modo claro',
     nav_language: 'Selección de idioma',
+    nav_languages_list: ['Inglés','Francés','Español'],
     nav_toggle_open: 'Abrir sidebar',
     nav_toggle_close: 'Cerrar sidebar',
     compare_title: 'Comparar análisis',
@@ -534,6 +564,7 @@ const translations: Record<Lang, Translations> = {
     results_searchFilterByNamePlaceholder: "Filtrar por nombre…",
     results_searchFilterByStatusComplete: "Completado",
     results_searchFilterByStatusPending: "Pendiente",
+    results_searchFilterByStatusFailed: "Error",  
     results_searchFilterByStatusFailed: "Fallido",
     results_searchFilterByStatusAll: "Todos los estados",
     results_searchFilterModeName: "Nombre",
@@ -645,6 +676,7 @@ const translations: Record<Lang, Translations> = {
     results_config_cancel: 'Cancelar',
     btn_download: 'Descargar',
     btn_send: 'Enviar',
+    btn_confirm: 'Confirmar',
     error_window_size: "El tamaño de la ventana debe ser un número positivo (> 0).",
     error_step_size: "El tamaño del paso debe ser un número positivo (> 0).",
     error_rate_similarity: "La tasa de similitud debe ser un número no negativo (>= 0).",
@@ -652,6 +684,8 @@ const translations: Record<Lang, Translations> = {
     error_bootstrap_threshold: "El umbral de bootstrap debe ser un número no negativo (>= 0).",
     error_dist_threshold: "El umbral de distancia debe ser un número no negativo (>= 0).",
     error_correlation_threshold: "El umbral de correlación debe estar entre 0 y 1.",
+    server_connection_lost: "Conexión con el servidor interrumpida...",
+    loading_time_notice: "Esto puede tomar unos minutos…",
     preset_select: 'Seleccionar preajuste',
     preset_name: 'Nombre del preajuste',
   },
