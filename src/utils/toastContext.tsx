@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useState, type ReactNode } from "react"
 
 type ToastType = "success" | "error" | "info" | "warning"
 
@@ -29,7 +29,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     setTimeout(() => {
       setToasts(t => t.filter(toast => toast.id !== id))
-    }, 3000)
+    }, 5000)
   }
 
   return (

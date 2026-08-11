@@ -8,6 +8,7 @@ import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsFor
 import { HelpSection, HelpHeading, HelpText } from '../../components/molecules/HelpSection/HelpSection'
 import { useLang } from '../../context/LanguageContext'
 import { validateSettings } from '../../utils/validationParamsSettings'
+import { useToast } from '../../utils/toastContext'
 
 /**
  * `/settings` — edits the *global* pipeline settings (`GET`/`PUT /api/settings`),
@@ -22,7 +23,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
-  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+  const { addToast } = useToast()
 
   // Verify if the current settings differ from the initial settings to determine if the "Save" button should be enabled
   const isDirty = JSON.stringify(settings) !== JSON.stringify(initialSettings)
@@ -33,35 +34,34 @@ export default function SettingsPage() {
         setSettings(data)
         setInitialSettings(data) 
       })
-      .catch(e => setMessage({ text: `Failed to load settings: ${e instanceof Error ? e.message : String(e)}`, ok: false }))
+      .catch(e => addToast(`Failed to load settings: ${e instanceof Error ? e.message : String(e)}`,'error'))
       .finally(() => setLoading(false))
   }, [])
 
   const handleChange = (key: keyof AnalysisSettings, value: unknown) => {
     setSettings(prev => ({ ...prev, [key]: value } as Partial<AnalysisSettings>))
-    setMessage(null)
   }
 
 
   const handleSave = async () => {
-    setMessage(null)
     const error = validateSettings(settings, t)
     if (error) {
-      setMessage({ text: error, ok: false })
+      addToast(error, 'error')
       return
     }
     setSaving(true)
     try {
       await api.settings.update(settings as AnalysisSettings)
-      setMessage({ text: t.settings_saved, ok: true })
+      addToast(t.settings_saved, 'success')
     } catch (e) {
-      setMessage({ text: `Failed to save: ${e instanceof Error ? e.message : String(e)}`, ok: false })
+      addToast(`Failed to save: ${e instanceof Error ? e.message : String(e)}`, 'error')
 
       try {
         const persistedSettings = await api.settings.get()
         setSettings(persistedSettings)
       } catch {
         // If we fail to reload the settings, we just leave them as-is. The user can try again later.
+        addToast('Failed to reload the settings', 'warning')
       }
     } finally {
       setSaving(false)
@@ -80,14 +80,13 @@ export default function SettingsPage() {
     }
 
     setResetting(true)
-    setMessage(null)
     try {
       const defaultSettings = await api.settings.reset()
       setSettings(defaultSettings)
       setInitialSettings(defaultSettings)
-      setMessage({ text: t.settings_reset_success, ok: true })
+      addToast(t.settings_reset_success,'success')
     } catch (e) {
-      setMessage({ text: `Failed to reset: ${e instanceof Error ? e.message : String(e)}`, ok: false })
+      addToast(`Failed to reset: ${e instanceof Error ? e.message : String(e)}`,'error')
 
       // Rollback to the persisted settings if the reset fails, so the user doesn't lose their current settings.
       try {
@@ -96,6 +95,7 @@ export default function SettingsPage() {
         setInitialSettings(persistedSettings)
       } catch {
         // If we fail to reload the settings, we just leave them as-is. The user can try again later.
+        addToast('Failed to reload the settings', 'warning')
       }
     } finally {
       setResetting(false)
@@ -131,11 +131,11 @@ export default function SettingsPage() {
               {t.settings_reset_btn}
             </Button>
 
-            {message && (
+            {/*message && (
               <span style={{ fontSize: '13px', color: message.ok ? 'var(--text-secondary)' : 'var(--error)' }}>
                 {message.text}
               </span>
-            )}
+            )*/}
           </div>
         </PageSection>
 
