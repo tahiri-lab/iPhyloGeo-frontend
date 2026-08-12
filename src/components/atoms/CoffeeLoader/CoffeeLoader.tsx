@@ -6,6 +6,7 @@ import { useServerStatus } from '../../../context/ServerStatusContext'
 import ConfirmDialog from '../../molecules/ConfirmDialog/ConfirmDialog'
 import api from '../../../services/api'
 import EmailInput from '../../molecules/EmailInput/EmailInput'
+import { useToast } from '../../../utils/toastContext'
 
 function CoffeeMug() {
   return (
@@ -107,26 +108,26 @@ export default function CoffeeLoader({
   const { isOffline } = useServerStatus()
   const cancelDialogRef = useRef<HTMLDialogElement>(null)
   const [email, setEmail] = useState('')
-  const [emailErr, setEmailErr] = useState('')
   const [canCancel, setCanCancel] = useState(true)
+  const { addToast } = useToast()
 
   const handleCancel = async () => {
     const success = await api.jobs.cancel(resultId)
     if (!success) {
-      // TODO replace with toast
-      alert("Failed to cancel task")
+      addToast("Failed to cancel task", "error")
     }
     else {
+      addToast("Task cancelled", "success")
       setCanCancel(false)
     }
   }
 
   const handleSubmit = () => {
     if (!email || !validateEmail(email)) {
-      setEmailErr('Please enter a valid email.')
+      addToast('Please enter a valid email.', "warning")
       return
     }
-    setEmailErr('')
+    //addToast('Email valid', "success")
     onEmailSubmit?.(email)
   }
 

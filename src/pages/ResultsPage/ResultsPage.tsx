@@ -18,6 +18,7 @@ import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 import { validateSettings } from '../../utils/validationParamsSettings'
 import { usePresets } from '../../context/PresetContext'
 import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
+import { useToast } from '../../utils/toastContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -299,14 +300,13 @@ export default function ResultsPage() {
   const [selected, setSelected] = useState<AnalysisResult | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [emailMsg, setEmailMsg] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [, setSearchParams] = useSearchParams()
   const [configPanel, setConfigPanel] = useState<ConfigPanel | null>(null)
   const [rerunning, setRerunning] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<Partial<AnalysisSettings>>({})
 
+  const { addToast } = useToast()
   const { clearSelection } = usePresets()
 
   useEffect(() => {
@@ -325,7 +325,6 @@ export default function ResultsPage() {
     const targetId = r._id
     currentSelectedIdRef.current = targetId
 
-    setEmailMsg(null)
     setConfigPanel(null)
     setSelected(null)
 
@@ -386,14 +385,14 @@ export default function ResultsPage() {
               setResults(prev => [...prev, result])
               selectResult(result, false)
             })
-            .catch(() => setError('Result not found'))
+            .catch(() => addToast('Result not found','error'))
             .finally(() => {
               if (isMounted) setLoadingDetail(false)
             })
         }
       })
       .catch(e => {
-        if (isMounted) setError(e instanceof Error ? e.message : String(e))
+        if (isMounted) addToast(e instanceof Error ? e.message : String(e),'error')
       })
       .finally(() => {
         if (isMounted) setLoading(false)
@@ -424,7 +423,7 @@ export default function ResultsPage() {
       }
     }
   } catch (err) {
-    alert(`Delete failed: ${err instanceof Error ? err.message : String(err)}`)
+    addToast(`Delete failed: ${err instanceof Error ? err.message : String(err)}`, "error")
   }
 }
 
@@ -433,7 +432,7 @@ export default function ResultsPage() {
 
     const validationError = validateSettings(configPanel.settings, t)
     if (validationError) {
-      alert(validationError)
+      addToast(validationError, "error")
       return
     }
 
@@ -452,7 +451,7 @@ export default function ResultsPage() {
       setConfigPanel(null)
       navigate(`/results?id=${result_id}`)
     } catch (err) {
-      alert(`Re-run failed: ${err instanceof Error ? err.message : String(err)}`)
+      addToast(`Re-run failed: ${err instanceof Error ? err.message : String(err)}`, "error")
     } finally {
       setRerunning(false)
     }
@@ -485,18 +484,17 @@ export default function ResultsPage() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (err) {
-      alert(`Download failed: ${err instanceof Error ? err.message : String(err)}`)
+      addToast(`Download failed: ${err instanceof Error ? err.message : String(err)}`,"error")
     }
   }
 
   const handleEmail = async (email: string) => {
     if (!selected) return
-    setEmailMsg(null)
     try {
       await api.results.email(selected._id, email)
-      setEmailMsg(t.btn_send + ' ✓')
+      addToast(t.btn_send + ' ✓',"success")
     } catch (err) {
-      setEmailMsg(`Failed to send: ${err instanceof Error ? err.message : String(err)}`)
+      addToast(`Failed to send: ${err instanceof Error ? err.message : String(err)}`,"error")
     }
   }
 
@@ -512,7 +510,7 @@ export default function ResultsPage() {
     )
   }
 
-  if (error) {
+  /*if (error) {
     return (
       <PageContainer title={t.results_title}>
         <PageCard>
@@ -520,7 +518,7 @@ export default function ResultsPage() {
         </PageCard>
       </PageContainer>
     )
-  }
+  }*/
 
   return (
     <PageContainer title={t.results_title}>
@@ -785,11 +783,11 @@ export default function ResultsPage() {
                 buttonLabel={t.btn_send}
                 onSend={handleEmail}
               />
-              {emailMsg && (
+              {/*emailMsg && (
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: 0 }}>
                   {emailMsg}
                 </p>
-              )}
+              )*/}
             </div>
           </PageSection>
         )}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { validateEmail } from '../../../utils/validation'
+import { useToast } from '../../../utils/toastContext'
 
 interface EmailInputProps {
   description?: string
@@ -18,12 +19,11 @@ export default function EmailInput({
   secondary = false,
 }: EmailInputProps) {
   const [value, setValue] = useState('')
-  const [error, setError] = useState('')
+  const { addToast } = useToast()
 
   const handleSend = () => {
-    if (!value) { setError('Email is required.'); return }
-    if (!validateEmail(value)) { setError('Please enter a valid email address.'); return }
-    setError('')
+    if (!value) { addToast('Email is required.','warning'); return }
+    if (!validateEmail(value)) { addToast('Please enter a valid email address.','warning'); return }
     onSend?.(value)
   }
 
@@ -43,7 +43,7 @@ export default function EmailInput({
         <input
           type="email"
           value={value}
-          onChange={e => { setValue(e.target.value); setError('') }}
+          onChange={e => { setValue(e.target.value); }}
           placeholder={placeholder}
           style={{
             flex: 1,
@@ -87,11 +87,11 @@ export default function EmailInput({
           {buttonLabel}
         </button>
       </div>
-      {error && (
+      {/*error && (
         <p style={{ color: 'var(--error)', fontSize: '12px', marginTop: '5px', textAlign: 'left' }}>
           {error}
         </p>
-      )}
+      )*/}
     </div>
   )
 }

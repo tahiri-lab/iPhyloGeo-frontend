@@ -12,6 +12,7 @@ import TreePagination from '../../components/molecules/Pagination/Pagination'
 import { TreeGraph } from '../../components/molecules/CytoscapeTree/CytoscapeTree'
 import SettingsView from '../../components/organisms/SettingsView/SettingsView'
 import SearchBar from '../../components/molecules/SearchBar/SearchBar'
+import { useToast } from '../../utils/toastContext'
 
 // ── GraphPage ─────────────────────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ export default function GraphPage() {
   const [layout, setLayout] = useState<LayoutType>('top-down')
   const [treeTab, setTreeTab] = useState<'climatic' | 'genetic'>('climatic')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { addToast } = useToast()
   const { theme } = useTheme()
   const { t } = useLang()
   const darkMode = theme === 'dark'
@@ -49,7 +50,7 @@ export default function GraphPage() {
         setResults(complete)
         if (complete.length > 0) loadResult(complete[0])
       })
-      .catch(e => setError(e instanceof Error ? e.message : String(e)))
+      .catch(e => addToast(e instanceof Error ? e.message : String(e), 'error'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -78,11 +79,11 @@ export default function GraphPage() {
     </PageContainer>
   )
 
-  if (error) return (
+  /*if (error) return (
     <PageContainer title={t.graph_title}>
       <PageCard><p style={{ padding: '24px', color: 'var(--error)', fontSize: '14px' }}>{error}</p></PageCard>
     </PageContainer>
-  )
+  )*/
 
   return (
     <PageContainer title={t.graph_title}>

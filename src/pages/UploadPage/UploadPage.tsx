@@ -14,6 +14,7 @@ import AnalysisSettingsForm from '../../components/molecules/AnalysisSettingsFor
 import { inputStyle } from '../../components/atoms/PageGrid/PageGrid'
 import { usePresets } from '../../context/PresetContext'
 import PresetsToolbar from '../../components/molecules/PresetToolbar/PresetToolbar'
+import { useToast } from '../../utils/toastContext'
 
 interface UploadedFile {
   name: string
@@ -113,12 +114,12 @@ export default function UploadPage() {
   const [running, setRunning] = useState(false)
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [resultId, setResultId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [climaticPreview, setClimaticPreview] = useState<ClimaticPreview | null>(null)
   const [geneticPreview, setGeneticPreview] = useState<GeneticPreview | null>(null)
   const [emailSent, setEmailSent] = useState(false)
   const notifyEmailRef = useRef<string | null>(null)
   const coffeeLoaderRef = useRef<HTMLDialogElement>(null)
+  const { addToast } = useToast()
 
   // Settings & Presets
   const [localSettings, setLocalSettings] = useState<Partial<AnalysisSettings>>({})
@@ -196,7 +197,6 @@ export default function UploadPage() {
     setClimateFile({ name: file.name, size: file.size, file })
     setClimaticId(null)
     setClimaticPreview(null)
-    setError(null)
     setUploadingClimatic(true)
     const derivedName = file.name.replace(/\.[^.]+$/, '')
     setAnalysisName(derivedName)
@@ -206,7 +206,7 @@ export default function UploadPage() {
       const prev = await api.preview.climatic(file_id)
       setClimaticPreview(prev)
     } catch (e) {
-      setError(`Climatic upload failed: ${e instanceof Error ? e.message : String(e)}`)
+      addToast(`Climatic upload failed: ${e instanceof Error ? e.message : String(e)}`,'error')
       setClimateFile(null)
     } finally {
       setUploadingClimatic(false)
@@ -217,7 +217,6 @@ export default function UploadPage() {
     setGeneticFile({ name: file.name, size: file.size, file })
     setGeneticId(null)
     setGeneticPreview(null)
-    setError(null)
     setUploadingGenetic(true)
     try {
       const { file_id } = await api.upload.genetic(file)
@@ -225,7 +224,7 @@ export default function UploadPage() {
       const prev = await api.preview.genetic(file_id)
       setGeneticPreview(prev)
     } catch (e) {
-      setError(`Genetic upload failed: ${e instanceof Error ? e.message : String(e)}`)
+      addToast(`Genetic upload failed: ${e instanceof Error ? e.message : String(e)}`,'error')
       setGeneticFile(null)
     } finally {
       setUploadingGenetic(false)
@@ -234,7 +233,6 @@ export default function UploadPage() {
 
   const handleRun = async () => {
     if (!climaticId || !geneticId) return
-    setError(null)
     setJobStatus(null)
     setResultId(null)
     setEmailSent(false)
@@ -258,25 +256,24 @@ export default function UploadPage() {
               try {
                 await api.results.email(result_id, notifyEmailRef.current, lang)
               } catch (e) {
-                // TODO replace with toast
-                alert(`Email failed to send: ${e instanceof Error ? e.message : String(e)}`)
+                addToast(`Email failed to send: ${e instanceof Error ? e.message : String(e)}`, 'error')
               }
             }
             navigate('/results')
           } else if (status.status === 'error') {
-            setError(status.error ?? 'Pipeline failed')
+            addToast(status.error ?? 'Pipeline failed','error')
             setRunning(false)
           } else {
             setTimeout(poll, 2000)
           }
         } catch (e) {
-          setError(`Status check failed: ${e instanceof Error ? e.message : String(e)}`)
+          addToast(`Status check failed: ${e instanceof Error ? e.message : String(e)}`,'error')
           setRunning(false)
         }
       }
       poll()
     } catch (e) {
-      setError(`Failed to start job: ${e instanceof Error ? e.message : String(e)}`)
+      addToast(`Failed to start job: ${e instanceof Error ? e.message : String(e)}`,'error')
       setRunning(false)
     }
   }
@@ -393,9 +390,9 @@ export default function UploadPage() {
               )}
             </div>
 
-            {error && (
+            {/*error && (
               <p style={{ color: 'var(--error)', fontSize: '13px', marginTop: '12px', marginBottom: 0 }}>{error}</p>
-            )}
+            )*/}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
               <Button variant="actions" disabled={!canRun} onClick={handleRun}>
