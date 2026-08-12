@@ -783,11 +783,11 @@ export default function ResultsPage() {
                 buttonLabel={t.btn_send}
                 onSend={handleEmail}
               />
-              {emailMsg && (
+              {/*emailMsg && (
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: 0 }}>
                   {emailMsg}
                 </p>
-              )}
+              )*/}
             </div>
           </PageSection>
         )}
